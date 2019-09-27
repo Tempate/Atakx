@@ -4,12 +4,12 @@
 #include "lookup.h"
 #include "moves.h"
 
-int main(int argc, char **argv) {
+int main() {
 
 	genLookupTables();
 	
-	Board board = initialBoard();
-	printBoard(board);
+	Board *board = new Board();
+	board->print();
 	
 	return 0;
 }

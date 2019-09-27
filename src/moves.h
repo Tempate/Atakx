@@ -3,19 +3,16 @@
 
 #include <vector>
 
-#include "board.h"
-
 enum {SINGLE, DOUBLE};
 
-typedef struct {
+struct Move {
     int from;
     int to;
     int type;
     int color;
-} Move;
 
-void makeMove(Board &board, const Move &move);
-
-std::vector<Move> genMoves(Board &board);
+    Move(int from, int to, int type, int color):
+        from(from), to(to), type(type), color(color) {}
+};
 
 #endif // #ifndef MOVES_H_

@@ -1,8 +1,6 @@
 #ifndef MOVES_H_
 #define MOVES_H_
 
-#include <vector>
-
 enum {SINGLE, DOUBLE};
 
 struct Move {

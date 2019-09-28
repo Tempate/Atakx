@@ -1,7 +1,8 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
-#include <inttypes.h>
+#define FILES 7
+#define RANKS 7
 
 enum {BLUE, RED};
 

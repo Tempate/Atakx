@@ -6,12 +6,14 @@
 #include "main.h"
 #include "board.h"
 #include "uai.h"
+#include "search.h"
 
 Settings settings;
 
 void isready(void);
 void position(Board &board, const std::string &s);
 void go(Board &board, const std::string &s);
+void bestmove(const Board &board);
 
 pthread_t worker;
 int working = 0;
@@ -71,37 +73,39 @@ void position(Board &board, const std::string &s) {
 
     const size_t n = s.find("moves");
 
-	if (n != -1)
+	if (n != std::string::npos)
         board.playSequence(s.substr(n + 6));
 }
 
 void go(Board &board, const std::string &s) {
+    std::string cmd;
+    std::stringstream ss(s);
+    ss >> cmd;
+    
     settings.init();
 
-    if (s.compare("infinite") == 0)
+    if (cmd.compare("infinite") == 0)
         settings.depth = MAX_DEPTH;
-    else if (s.compare("wtime") == 0)
+    else if (cmd.compare("wtime") == 0)
         settings.wtime = std::stoi(s.substr(6));
-    else if (s.compare("btime") == 0)
+    else if (cmd.compare("btime") == 0)
         settings.btime = std::stoi(s.substr(6));
-    else if (s.compare("winc") == 0)
+    else if (cmd.compare("winc") == 0)
         settings.winc = std::stoi(s.substr(5));
-    else if (s.compare("binc") == 0)
+    else if (cmd.compare("binc") == 0)
         settings.binc = std::stoi(s.substr(5));
-    else if (s.compare("depth") == 0)
+    else if (cmd.compare("depth") == 0)
         settings.depth = std::stoi(s.substr(6));
 
-    // bestmove(board);
+    bestmove(board);
 }
 
-/*
 void bestmove(const Board &board) {
 	Move bestMove = search(board);
     std::cout << "bestmove " << bestMove.toString() << std::endl;
 }
-*/
 
-void infoString(const Board *board, const int depth, const int score, const Bitboard nodes, const int duration, std::vector<Move> pv) {
+void infoString(const Board &board, const int depth, const int score, const Bitboard nodes, const int duration, std::vector<Move> pv) {
     std::cout << "info depth " << depth << " score cp " << score << " nodes " << nodes << " time " << duration;
 
 	if (duration > 0)

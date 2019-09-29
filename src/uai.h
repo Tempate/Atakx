@@ -1,7 +1,7 @@
 #ifndef UAI_H_
 #define UAI_H_
 
-#define DEF_DEPTH 10
+#define DEF_DEPTH 5
 #define MAX_DEPTH 50
 
 struct Settings {
@@ -27,5 +27,7 @@ struct Settings {
 extern Settings settings;
 
 void uai();
+
+void infoString(const Board &board, const int depth, const int score, const Bitboard nodes, const int duration, std::vector<Move> pv);
 
 #endif // #ifndef UAI_H_

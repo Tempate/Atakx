@@ -20,10 +20,14 @@ class Bitboard {
             value{1ULL << sqr} {}
 
         constexpr Bitboard(int file, int rank):
-            value{1ULL << (rank * RANKS + file)} {}
+            value{1ULL << getSquare(file, rank)} {}
 
         static constexpr Bitboard full() {
             return Bitboard{(uint64_t) 0x1ffffffffffff};
+        }
+
+        constexpr int getSquare(int file, int rank) {
+            return rank * RANKS + file;
         }
 
         constexpr Bitboard operator&(const Bitboard &bb) const {

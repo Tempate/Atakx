@@ -1,8 +1,6 @@
 #include <iostream>
 #include <vector>
-
-using std::cout;
-using std::endl;
+#include <sstream>
 
 #include "main.h"
 #include "bitboard.h"
@@ -14,6 +12,11 @@ using std::endl;
 void addMoves(std::vector<Move> &moves, Bitboard bb, const int from, const int type, const int color);
 
 Board::Board() {
+    blank();
+    startpos();
+}
+
+void Board::blank() {
     pieces[BLUE] = Bitboard{};
     pieces[RED] = Bitboard{};
 
@@ -24,8 +27,6 @@ Board::Board() {
 
     turn = BLUE;
     opponent = RED;
-
-    startpos();
 }
 
 void Board::startpos() {
@@ -41,6 +42,8 @@ void Board::updateOccupancy() {
 void Board::fromFen(const std::string &fen) {
     int rank = RANKS-1, file = 0;
     int inBounds = true;
+
+    blank();
 
     for (char c : fen) {
 
@@ -135,7 +138,6 @@ std::vector<Move> Board::genMoves() const {
 }
 
 void Board::make(const Move &move) {
-
     pieces[turn] ^= Bitboard{move.to};
 
     if (move.type == DOUBLE)
@@ -153,25 +155,45 @@ void Board::make(const Move &move) {
 }
 
 void Board::print() const {
-    cout << endl;
+    std::cout << std::endl;
 
     for (int y = RANKS-1; y >= 0; y--) {
         for (int x = 0; x < FILES; x++) {
             Bitboard sqr(x, y);
 
             if (pieces[BLUE] & sqr)
-                cout << "o ";
+                std::cout << "o ";
             else if (pieces[RED] & sqr)
-                cout << "x ";
+                std::cout << "x ";
             else
-                cout << ". ";
+                std::cout << ". ";
         }
 
-        cout << endl;
+        std::cout << std::endl;
     }
     
-    cout << endl;
-    cout << "Turn: " << (turn == BLUE ? "Blue" : "Red") << endl;        
+    std::cout << std::endl;
+    std::cout << "Turn: " << (turn == BLUE ? "Blue" : "Red") << std::endl;        
+}
+
+
+void Board::playSequence(const std::string &movesString) {
+    std::stringstream s(movesString);
+    std::string moveString;
+
+    while (s >> moveString) {
+        Move move(moveString, turn);
+        make(move);
+    }
+}
+
+int Board::eval() {
+    int score = pieces[BLUE].popCount() - pieces[RED].popCount();
+
+    if (turn == RED)
+        score = -score;
+
+    return score;
 }
 
 void addMoves(std::vector<Move> &moves, Bitboard bb, const int from, const int type, const int color) {    

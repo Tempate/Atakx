@@ -24,6 +24,7 @@ class Board {
 
         Board();
 
+        void blank();
         void startpos();
         
         void fromFen(const std::string &fen);
@@ -34,6 +35,10 @@ class Board {
         void make(const Move &move);
 
         void print() const;
+
+        void playSequence(const std::string &moves);
+
+        int eval();
 };
 
 constexpr static inline int getRank(const int sqr) { 

@@ -187,13 +187,10 @@ void Board::playSequence(const std::string &movesString) {
     }
 }
 
-int Board::eval() {
+int Board::eval() const {
     int score = pieces[BLUE].popCount() - pieces[RED].popCount();
-
-    if (turn == RED)
-        score = -score;
-
-    return score;
+    
+    return (turn == BLUE) ? score : -score;
 }
 
 void addMoves(std::vector<Move> &moves, Bitboard bb, const int from, const int type, const int color) {    

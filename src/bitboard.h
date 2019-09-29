@@ -81,19 +81,19 @@ class Bitboard {
             return value;
         }
 
-        constexpr inline int popCount() {
+        constexpr inline int popCount() const {
             return __builtin_popcountll(value); 
         }
 
-        constexpr inline int bitScanForward() {
+        constexpr inline int bitScanForward() const {
             return __builtin_ctzll(value);
         }
 
-        constexpr inline int bitScanReverse() {
+        constexpr inline int bitScanReverse() const {
             return 48 - __builtin_clzll(value); 
         }
 
-        constexpr inline uint64_t lsbBB() {
+        constexpr inline uint64_t lsbBB() const {
             return value & -value;
         }
 

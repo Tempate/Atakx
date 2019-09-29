@@ -38,7 +38,7 @@ class Board {
 
         void playSequence(const std::string &moves);
 
-        int eval();
+        int eval() const;
 };
 
 constexpr static inline int getRank(const int sqr) { 

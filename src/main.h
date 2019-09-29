@@ -7,6 +7,8 @@
 #define FILES 7
 #define RANKS 7
 
+#define MATE_SCORE 10000
+
 enum {BLUE, RED};
 
 #endif // #ifndef MAIN_H_

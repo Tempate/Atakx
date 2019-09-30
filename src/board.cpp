@@ -9,11 +9,15 @@
 
 #include "board.h"
 
-void addMoves(std::vector<Move> &moves, Bitboard bb, const int from, const int type, const int color);
+void addMoves(std::vector<Move> &moves, Bitboard &bb, const int from, const int type);
 
 Board::Board() {
     blank();
     startpos();
+}
+
+Board::Board(const std::string &fen) {
+    fromFen(fen);
 }
 
 void Board::blank() {
@@ -30,7 +34,7 @@ void Board::blank() {
 }
 
 void Board::startpos() {
-    fromFen("x5o/7/7/7/7/7/o5x w");
+    fromFen("o5x/7/7/7/7/7/x5o w");
 }
 
 void Board::updateOccupancy() {
@@ -121,18 +125,18 @@ std::vector<Move> Board::genMoves() const {
     std::vector<Move> moves;
 
     Bitboard bb = pieces[turn];
-    Bitboard sMoves = 0;
+    Bitboard sMoves;
 
     if (bb) do {
         int sqr = bb.bitScanForward();
         sMoves |= singlesLookup[sqr] & empty;
 
         Bitboard dMoves = doublesLookup[sqr] & empty;
-        addMoves(moves, dMoves, sqr, DOUBLE, turn);
+        addMoves(moves, dMoves, sqr, DOUBLE);
 
     } while (bb.unsetLSB());
 
-    addMoves(moves, sMoves, 0, SINGLE, turn);
+    addMoves(moves, sMoves, 0, SINGLE);
 
     return moves;
 }
@@ -182,20 +186,36 @@ void Board::playSequence(const std::string &movesString) {
     std::string moveString;
 
     while (s >> moveString) {
-        Move move(moveString, turn);
+        Move move(moveString);
         make(move);
     }
 }
 
 int Board::eval() const {
-    int score = pieces[BLUE].popCount() - pieces[RED].popCount();
-    
-    return (turn == BLUE) ? score : -score;
+    if (pieces[turn].popCount() == 0)
+        return std::numeric_limits<int>::min();
+
+    if (pieces[opponent].popCount() == 0)
+        return std::numeric_limits<int>::max();
+
+    return pieces[turn].popCount() - pieces[opponent].popCount();
 }
 
-void addMoves(std::vector<Move> &moves, Bitboard bb, const int from, const int type, const int color) {    
+int Board::score() const {
+    int ownPieces = pieces[turn].popCount();
+    int otherPieces = pieces[opponent].popCount();
+
+    if (ownPieces > otherPieces)
+        return MATE_SCORE;
+    else if (otherPieces > ownPieces)
+        return -MATE_SCORE;
+    else
+        return 0;
+}
+
+void addMoves(std::vector<Move> &moves, Bitboard &bb, const int from, const int type) {    
     if (bb) do {
         const int to = bb.bitScanForward();
-        moves.emplace_back(from, to, type, color);
+        moves.emplace_back(from, to, type);
     } while (bb.unsetLSB());
 }

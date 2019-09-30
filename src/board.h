@@ -23,6 +23,7 @@ class Board {
         void updateOccupancy();
 
         Board();
+        Board(const std::string &fen);
 
         void blank();
         void startpos();
@@ -39,6 +40,7 @@ class Board {
         void playSequence(const std::string &moves);
 
         int eval() const;
+        int score() const;
 };
 
 constexpr static inline int getRank(const int sqr) { 

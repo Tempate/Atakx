@@ -45,7 +45,11 @@ void uai() {
 			go(board, msg.substr(3));
         else if (cmd.compare("print") == 0)
             board.print();
-		else if (cmd.compare("quit") == 0)
+        else if (cmd.compare("perft") == 0) {
+            const int depth = std::stoi(msg.substr(6));
+            uint64_t nodes = board.perft(depth);
+            std::cout << "nodes " << nodes << std::endl;
+        } else if (cmd.compare("quit") == 0)
 			break;
 	}
 }
@@ -96,6 +100,8 @@ void go(Board &board, const std::string &s) {
         settings.binc = std::stoi(s.substr(5));
     else if (cmd.compare("depth") == 0)
         settings.depth = std::stoi(s.substr(6));
+    else if (cmd.compare("movetime") == 0)
+        settings.movetime = std::stoi(s.substr(9));
 
     bestmove(board);
 }
@@ -105,7 +111,7 @@ void bestmove(const Board &board) {
     std::cout << "bestmove " << bestMove.toString() << std::endl;
 }
 
-void infoString(const Board &board, const int depth, const int score, const int nodes, const int duration, std::vector<Move> pv) {
+void infoString(const int depth, const int score, const int nodes, const int duration, std::vector<Move> pv) {
     std::cout << "info depth " << depth << " score cp " << score << " nodes " << nodes << " time " << duration;
 
 	if (duration > 0)

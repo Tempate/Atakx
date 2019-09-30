@@ -105,13 +105,13 @@ void bestmove(const Board &board) {
     std::cout << "bestmove " << bestMove.toString() << std::endl;
 }
 
-void infoString(const Board &board, const int depth, const int score, const Bitboard nodes, const int duration, std::vector<Move> pv) {
+void infoString(const Board &board, const int depth, const int score, const int nodes, const int duration, std::vector<Move> pv) {
     std::cout << "info depth " << depth << " score cp " << score << " nodes " << nodes << " time " << duration;
 
 	if (duration > 0)
 		std::cout << " nps " << 1000 * nodes / duration;
 
-    std::cout << " pv ";
+    std::cout << " pv";
 
 	for (Move move : pv)
         std::cout << " " << move.toString();

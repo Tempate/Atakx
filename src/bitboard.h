@@ -101,10 +101,8 @@ class Bitboard {
             return value &= value - 1;
         }
 
-        void print() {
+        void print() const {
             std::cout << "----------------" << std::endl;
-
-            std::cout << value << std::endl;
 
             for (int y = RANKS-1; y >= 0; y--) {
                 for (int x = 0; x < FILES; x++) {

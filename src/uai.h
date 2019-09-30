@@ -28,6 +28,6 @@ extern Settings settings;
 
 void uai();
 
-void infoString(const Board &board, const int depth, const int score, const Bitboard nodes, const int duration, std::vector<Move> pv);
+void infoString(const Board &board, const int depth, const int score, const int nodes, const int duration, std::vector<Move> pv);
 
 #endif // #ifndef UAI_H_

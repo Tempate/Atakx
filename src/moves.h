@@ -11,14 +11,13 @@ struct Move {
     int from;
     int to;
     int type;
-    int color;
 
     Move() {}
 
-    Move(int from, int to, int type, int color):
-        from(from), to(to), type(type), color(color) {}
+    Move(int from, int to, int type):
+        from(from), to(to), type(type) {}
 
-    Move(std::string moveString, const int color) {
+    Move(std::string moveString) {
         if (moveString.length() == 2) {
             to = coordToSqr(moveString);
             type = SINGLE;
@@ -27,11 +26,9 @@ struct Move {
             to = coordToSqr(moveString.substr(2,4));
             type = DOUBLE;
         }
-
-        this->color = color;
     }
 
-    std::string toString() {
+    std::string toString() const {
         static const std::string coords[49] = {
             "a1", "b1", "c1", "d1", "e1", "f1", "g1", 
             "a2", "b2", "c2", "d2", "e2", "f2", "g2", 
@@ -52,10 +49,16 @@ struct Move {
         return move;
     }
 
-    private:
-        int coordToSqr(std::string coord) {
-            return Bitboard{}.getSquare(coord[0] - 'a', coord[1] - '1');
-        }
+    constexpr bool operator==(const Move &move) const {
+        if (type == SINGLE)
+            return to == move.to;
+        else
+            return from == move.from && to == move.to;
+    }
+
+    int coordToSqr(std::string coord) {
+        return Bitboard{}.getSquare(coord[0] - 'a', coord[1] - '1');
+    }
 };
 
 #endif // #ifndef MOVES_H_

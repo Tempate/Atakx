@@ -5,14 +5,14 @@
 
 #include "bitboard.h"
 
-enum {SINGLE, DOUBLE};
+enum {NULL_MOVE, SINGLE, DOUBLE};
 
 struct Move {
     int from;
     int to;
     int type;
 
-    Move() {}
+    Move(): type(NULL_MOVE) {}
 
     Move(int from, int to, int type):
         from(from), to(to), type(type) {}
@@ -41,10 +41,17 @@ struct Move {
 
         std::string move;
         
-        if (type == SINGLE)
+        switch (type) {
+        case SINGLE:
             move = coords[to];
-        else
+            break;
+        case DOUBLE:
             move = coords[from] + coords[to];
+            break;
+        case NULL_MOVE:
+            move = "0000";
+            break;
+        }
 
         return move;
     }

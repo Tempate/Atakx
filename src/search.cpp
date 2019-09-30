@@ -7,7 +7,7 @@
 #include "uai.h"
 #include "search.h"
 
-int alphabeta(const Board &board, std::vector<Move> &pv, int depth, int alpha, const int beta);
+int alphabeta(const Board &board, std::vector<Move> &pv, const int depth, int alpha, const int beta);
 
 Move search(const Board &board) {
     std::vector<Move> pv;
@@ -15,7 +15,7 @@ Move search(const Board &board) {
     const int alpha = std::numeric_limits<int>::min();
     const int beta = std::numeric_limits<int>::max();
 
-    for (int depth = 1; depth < settings.depth; ++depth) {
+    for (int depth = 1; depth <= settings.depth; ++depth) {
         int score = alphabeta(board, pv, depth, alpha, beta);
 
         infoString(board, depth, score, settings.nodes, 0, pv);
@@ -26,11 +26,10 @@ Move search(const Board &board) {
     return pv.front();
 }
 
-int alphabeta(const Board &board, std::vector<Move> &pv, int depth, int alpha, const int beta) {
-    
+int alphabeta(const Board &board, std::vector<Move> &pv, const int depth, int alpha, const int beta) {
     settings.nodes++;
     
-    if (depth <= 0)
+    if (depth == 0)
         return board.eval();
 
     int bestScore = std::numeric_limits<int>::min();
@@ -39,10 +38,13 @@ int alphabeta(const Board &board, std::vector<Move> &pv, int depth, int alpha, c
     std::vector<Move> moves = board.genMoves();
 
     if (moves.size() == 0)
-        return (board.eval() > 0) ? MATE_SCORE : -MATE_SCORE;
+        return board.score();
 
     for (Move move : moves) {
-        int score = -alphabeta(board, pv, depth - 1, -beta, -alpha);
+        Board copy = board;
+        copy.make(move);
+
+        const int score = -alphabeta(copy, pv, depth - 1, -beta, -alpha);
 
         if (score > bestScore) {
             bestScore = score;

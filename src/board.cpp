@@ -25,7 +25,7 @@ void Board::blank() {
     pieces[RED] = Bitboard{};
 
     empty = Bitboard{}.full();
-    occupied = Bitboard{};
+    gaps = Bitboard{};
     
     key = Bitboard{};
 
@@ -37,11 +37,6 @@ void Board::startpos() {
     fromFen("o5x/7/7/7/7/7/x5o w");
 }
 
-void Board::updateOccupancy() {
-    occupied = pieces[BLUE] | pieces[RED];
-    empty = ~occupied;
-}
-
 // TODO: accept null blocks
 void Board::fromFen(const std::string &fen) {
     int rank = RANKS-1, file = 0;
@@ -50,7 +45,6 @@ void Board::fromFen(const std::string &fen) {
     blank();
 
     for (char c : fen) {
-
         switch (c) {
         case ' ':
             inBounds = false;
@@ -77,12 +71,17 @@ void Board::fromFen(const std::string &fen) {
             turn = RED;
             ++file;
             break;
+        case '-':
+            if (inBounds)
+                gaps |= Bitboard{file, rank};
+            
+            ++file;
+            break;
         }
     }
 
+    empty = ~(pieces[BLUE] | pieces[RED] | gaps);
     opponent = turn ^ 1;
-
-    updateOccupancy();
 }
 
 std::string Board::toFen() const {
@@ -102,7 +101,12 @@ std::string Board::toFen() const {
                     blanks = 0;
                 }
 
-                fen += (pieces[BLUE] & sqr) ? 'o' : 'x';
+                if (pieces[BLUE] & sqr)
+                    fen += 'o';
+                else if (pieces[RED] & sqr)
+                    fen += 'x';
+                else
+                    fen += '-';
             }
         }
 
@@ -142,20 +146,22 @@ std::vector<Move> Board::genMoves() const {
 }
 
 void Board::make(const Move &move) {
-    pieces[turn] ^= Bitboard{move.to};
+    if (move.type != NULL_MOVE) {
+        pieces[turn] ^= Bitboard{move.to};
 
-    if (move.type == DOUBLE)
-        pieces[turn] ^= Bitboard{move.from};
+        if (move.type == DOUBLE)
+            pieces[turn] ^= Bitboard{move.from};
 
-    Bitboard captures = singlesLookup[move.to] & pieces[opponent];
-    
-    pieces[turn] ^= captures;
-    pieces[opponent] ^= captures;
+        Bitboard captures = singlesLookup[move.to] & pieces[opponent];
+        
+        pieces[turn] ^= captures;
+        pieces[opponent] ^= captures;
+
+        empty = ~(pieces[BLUE] | pieces[RED] | gaps);
+    }
 
     turn ^= 1;
     opponent ^= 1;
-
-    updateOccupancy();
 }
 
 void Board::print() const {
@@ -169,17 +175,18 @@ void Board::print() const {
                 std::cout << "o ";
             else if (pieces[RED] & sqr)
                 std::cout << "x ";
-            else
+            else  if (empty & sqr)
                 std::cout << ". ";
+            else 
+                std::cout << "* ";
         }
 
         std::cout << std::endl;
     }
     
     std::cout << std::endl;
-    std::cout << "Turn: " << (turn == BLUE ? "Blue" : "Red") << std::endl;        
+    std::cout << "Turn: " << (turn == BLUE ? "blue" : "red") << std::endl;        
 }
-
 
 void Board::playSequence(const std::string &movesString) {
     std::stringstream s(movesString);
@@ -193,10 +200,10 @@ void Board::playSequence(const std::string &movesString) {
 
 int Board::eval() const {
     if (pieces[turn].popCount() == 0)
-        return std::numeric_limits<int>::min();
+        return -MATE_SCORE;
 
     if (pieces[opponent].popCount() == 0)
-        return std::numeric_limits<int>::max();
+        return MATE_SCORE;
 
     return pieces[turn].popCount() - pieces[opponent].popCount();
 }
@@ -211,6 +218,24 @@ int Board::score() const {
         return -MATE_SCORE;
     else
         return 0;
+}
+
+uint64_t Board::perft(int depth) const {
+	std::vector<Move> moves = genMoves();
+
+	if (depth == 1)
+		return moves.size();
+
+	uint64_t nodes = 0;
+
+	for (Move move : moves) {
+		Board copy = *this;
+        copy.make(move);
+
+		nodes += copy.perft(depth - 1);
+	}
+
+	return nodes;
 }
 
 void addMoves(std::vector<Move> &moves, Bitboard &bb, const int from, const int type) {    

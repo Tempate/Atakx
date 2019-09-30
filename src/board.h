@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <cinttypes>
 
 #include "main.h"
 #include "moves.h"
@@ -11,16 +12,13 @@
 class Board {
     public:
         Bitboard pieces[2];
-        
         Bitboard empty;
-        Bitboard occupied;
-        
-        Bitboard key;
+        Bitboard gaps;
 
         int turn;
         int opponent;
 
-        void updateOccupancy();
+        uint64_t key;
 
         Board();
         Board(const std::string &fen);
@@ -41,6 +39,8 @@ class Board {
 
         int eval() const;
         int score() const;
+
+        uint64_t perft(int depth) const;
 };
 
 constexpr static inline int getRank(const int sqr) { 

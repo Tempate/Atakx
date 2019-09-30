@@ -15,7 +15,6 @@ void genLookupTables(void) {
 }
 
 void genSingleMovesLookup(void) {
-
     for (int i = 0; i < 49; ++i) {
         Bitboard sqr(i);
 
@@ -28,7 +27,6 @@ void genSingleMovesLookup(void) {
 }
 
 void genDoubleMovesLookup(void) {
-
     static const Bitboard notFGFiles = Bitboard{(uint64_t) 0x7cf9f3e7cf9f};
     static const Bitboard notABFiles = Bitboard{(uint64_t) 0x1f3e7cf9f3e7c};
 

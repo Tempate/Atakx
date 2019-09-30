@@ -13,7 +13,6 @@ int main() {
 
 	genLookupTables();
 
-	// testMatesInOne();
 	uai();
 	
 	return 0;

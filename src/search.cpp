@@ -21,14 +21,17 @@ Move search(const Board &board) {
     const int alpha = -MATE_SCORE;
     const int beta = MATE_SCORE;
 
+    settings.nodes = 0;
+
     timeManagement(board);
     start = clock();
 
     for (int depth = 1; depth <= settings.depth; ++depth) {
-        settings.nodes = 0;
-
         const int score = alphabeta(board, pv, depth, alpha, beta);
         const long duration = 1000 * (clock() - start) / CLOCKS_PER_SEC;
+
+        if (settings.stop)
+            break;
 
         infoString(depth, score, settings.nodes, duration, pv);
     }
@@ -53,8 +56,8 @@ int alphabeta(const Board &board, std::vector<Move> &pv, const int depth, int al
         return board.eval();
 
     int bestScore = std::numeric_limits<int>::min();
-    Move bestMove;
     
+    std::vector<Move> childPV;
     std::vector<Move> moves = board.genMoves();
 
     if (moves.size() == 0) {
@@ -69,15 +72,19 @@ int alphabeta(const Board &board, std::vector<Move> &pv, const int depth, int al
         Board copy = board;
         copy.make(move);
 
-        const int score = -alphabeta(copy, pv, depth - 1, -beta, -alpha);
+        const int score = -alphabeta(copy, childPV, depth - 1, -beta, -alpha);
 
         if (score > bestScore) {
             bestScore = score;
-            bestMove = move;
 
             if (bestScore > alpha) {
                 alpha = bestScore;
 
+                pv.assign(1, move);
+
+                if (childPV.size() > 0)
+                    pv.insert(pv.begin() + 1, childPV.begin(), childPV.end());
+                
                 if (alpha >= beta)
                     break;
             }
@@ -85,8 +92,6 @@ int alphabeta(const Board &board, std::vector<Move> &pv, const int depth, int al
     }
 
     assert(bestScore > std::numeric_limits<int>::min());
-
-    pv.assign(1, bestMove);
 
     return bestScore;
 }

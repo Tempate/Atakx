@@ -34,7 +34,7 @@ void Board::blank() {
 }
 
 void Board::startpos() {
-    fromFen("o5x/7/7/7/7/7/x5o w");
+    fromFen("x5o/7/7/7/7/7/o5x x");
 }
 
 // TODO: accept null blocks
@@ -57,14 +57,14 @@ void Board::fromFen(const std::string &fen) {
         case '5': case '6': case '7':
             file += c - '0';
             break;
-        case 'o': case 'O': case 'w': case 'W':
+        case 'x': case 'X': case 'b': case 'B':
             if (inBounds)
                 pieces[BLUE] |= Bitboard{file, rank};
             
             turn = BLUE;
             ++file;
             break;
-        case 'x': case 'X': case 'b': case 'B':
+        case 'o': case 'O': case 'w': case 'W':
             if (inBounds)
                 pieces[RED] |= Bitboard{file, rank};
             
@@ -87,6 +87,8 @@ void Board::fromFen(const std::string &fen) {
 std::string Board::toFen() const {
     std::string fen;
 
+    static const char players[2] = {'x', 'o'};
+
     for (int y = RANKS-1; y >= 0; y--) {
         int blanks = 0;
 
@@ -102,9 +104,9 @@ std::string Board::toFen() const {
                 }
 
                 if (pieces[BLUE] & sqr)
-                    fen += 'o';
+                    fen += players[BLUE];
                 else if (pieces[RED] & sqr)
-                    fen += 'x';
+                    fen += players[RED];
                 else
                     fen += '-';
             }
@@ -120,7 +122,7 @@ std::string Board::toFen() const {
     }
 
     fen += ' ';
-    fen += (turn == BLUE) ? 'o' : 'x';
+    fen += players[turn];
 
     return fen;
 }
@@ -225,6 +227,11 @@ uint64_t Board::perft(int depth) const {
 
 	if (depth == 1)
 		return moves.size();
+
+    // If there are still empty squares and 
+    // there are no moves, pass the turn.
+    if (moves.size() == 0 && empty)
+        moves.emplace_back();
 
 	uint64_t nodes = 0;
 

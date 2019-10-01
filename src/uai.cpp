@@ -111,7 +111,7 @@ void bestmove(const Board &board) {
     std::cout << "bestmove " << bestMove.toString() << std::endl;
 }
 
-void infoString(const int depth, const int score, const int nodes, const int duration, std::vector<Move> pv) {
+void infoString(const int depth, const int score, const uint64_t nodes, const int duration, std::vector<Move> pv) {
     std::cout << "info depth " << depth << " score cp " << score << " nodes " << nodes << " time " << duration;
 
 	if (duration > 0)

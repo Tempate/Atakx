@@ -1,6 +1,8 @@
 #ifndef UAI_H_
 #define UAI_H_
 
+#include <cinttypes>
+
 #define DEF_DEPTH 5
 #define MAX_DEPTH 50
 
@@ -8,7 +10,7 @@ struct Settings {
     bool stop;
 
     int depth;
-    int nodes;
+    uint64_t nodes;
 
     int wtime;
 	int btime;
@@ -20,11 +22,11 @@ struct Settings {
     void init() {
         stop = false;
 
-        depth = DEF_DEPTH;
+        depth = MAX_DEPTH;
         nodes = 0;
 
-        wtime = 1000;
-        btime = 1000;
+        wtime = 0;
+        btime = 0;
         winc = 0;
         binc = 0;
 
@@ -36,6 +38,6 @@ extern Settings settings;
 
 void uai();
 
-void infoString(const int depth, const int score, const int nodes, const int duration, std::vector<Move> pv);
+void infoString(const int depth, const int score, const uint64_t nodes, const int duration, std::vector<Move> pv);
 
 #endif // #ifndef UAI_H_

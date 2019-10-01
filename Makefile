@@ -1,25 +1,30 @@
-CC         = g++
-CFLAGS     = -std=c++17 -Wall -Wextra -O3 -flto -DNDEBUG -DNULLMOVE -DASPIRATION_WINDOWS -DLMR -DFUTILITY_PRUNING
+CXX           = g++
+FLAGS         = -std=c++17 -static
+RELEASE_FLAGS = $(FLAGS) -O3 -DNDEBUG -flto -march=native
+DEBUG_FLAGS   = $(FLAGS) -Wall -Wextra -g -gdwarf-2 -Wall -Wextra -pedantic
 
-LINKER     = g++ -o
-LFLAGS     = -pthread
+LINKER  = g++
 
-TARGET     = Atakx
-SRCDIR     = src
-OBJDIR     = obj
-BINDIR     = bin
+EXEC    = Atakx
+SRCDIR  = src
+OBJDIR  = obj
+BINDIR  = bin
 
 SOURCES  := $(wildcard $(SRCDIR)/*.cpp)
-INCLUDES := $(wildcard $(SRCDIR)/*.hpp)
+INCLUDES := $(wildcard $(SRCDIR)/*.h)
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
 
-$(BINDIR)/$(TARGET): $(BINDIR) $(OBJDIR) $(OBJECTS)
-	@$(LINKER) $@ $(OBJECTS) $(LFLAGS)
-	@echo "Linking complete!"
+$(BINDIR)/$(EXEC): $(BINDIR) $(OBJDIR) $(OBJECTS)
+	@$(LINKER) -o $@ $(OBJECTS) $(LDFLAGS)
 
 $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.cpp
-	@$(CC) $(CFLAGS) -c $< -o $@
-	@echo "Compiled "$<" successfully!"
+	@$(CXX) $(FLAGS) -c $< -o $@
+
+release:
+	$(MAKE) FLAGS="$(RELEASE_FLAGS)"
+
+debug:
+	$(MAKE) FLAGS="$(DEBUG_FLAGS)" EXEC="$(EXEC)-debug"
 
 bin:
 	mkdir -p $(BINDIR)
@@ -28,6 +33,6 @@ obj:
 	mkdir -p $(OBJDIR)
 
 clean:
-	rm -r $(OBJDIR)
+	rm -f $(OBJECTS)
 
 .PHONY: clean

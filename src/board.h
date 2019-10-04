@@ -1,54 +1,57 @@
 #ifndef BOARD_H_
 #define BOARD_H_
 
+#include <array>
+#include <cinttypes>
 #include <string>
 #include <vector>
-#include <cinttypes>
 
+#include "bitboard.h"
 #include "main.h"
 #include "moves.h"
-#include "bitboard.h"
 
 class Board {
-    public:
-        Bitboard pieces[2];
-        Bitboard empty;
-        Bitboard gaps;
+public:
+    Bitboard pieces[2];
+    Bitboard empty;
+    Bitboard gaps;
 
-        int turn;
-        int opponent;
+    int turn;
+    int opponent;
 
-        uint64_t key;
+    uint64_t key;
 
-        Board();
-        Board(const std::string &fen);
+    Board();
+    Board(const std::string &fen);
 
-        void blank();
-        void startpos();
-        
-        void fromFen(const std::string &fen);
-        std::string toFen() const;
+    void blank();
+    void random();
+    void startpos();
 
-        std::vector<Move> genMoves() const;
+    void fromFen(const std::string &fen);
+    std::string toFen() const;
 
-        void make(const Move &move);
+    std::vector<Move> genMoves() const;
+    int countMoves() const;
 
-        void print() const;
+    void make(const Move &move);
 
-        void playSequence(const std::string &moves);
+    void print() const;
 
-        int eval() const;
-        int score() const;
+    void playSequence(const std::string &moves);
 
-        uint64_t perft(int depth) const;
+    int eval() const;
+    int score() const;
+
+    uint64_t perft(int depth) const;
+    uint64_t ttPerft(int depth) const;
+
+    void genKey(const bool symmetry);
+    std::array<Board, 8> genSymmetries();
 };
 
-constexpr static inline int getRank(const int sqr) { 
-    return sqr / RANKS; 
-}
+constexpr static inline int getRank(const int sqr) { return sqr / RANKS; }
 
-constexpr static inline int getFile(const int sqr) { 
-    return sqr % FILES; 
-}
+constexpr static inline int getFile(const int sqr) { return sqr % FILES; }
 
 #endif /* BOARD_H_ */

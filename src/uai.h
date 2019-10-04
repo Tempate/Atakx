@@ -13,8 +13,8 @@ struct Settings {
     uint64_t nodes;
 
     int wtime;
-	int btime;
-	int winc;
+    int btime;
+    int winc;
     int binc;
 
     int movetime;
@@ -38,6 +38,7 @@ extern Settings settings;
 
 void uai();
 
-void infoString(const int depth, const int score, const uint64_t nodes, const int duration, std::vector<Move> pv);
+void infoString(const int depth, const int score, const uint64_t nodes,
+                const int duration, std::vector<Move> pv);
 
 #endif // #ifndef UAI_H_

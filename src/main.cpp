@@ -3,17 +3,16 @@
 
 #include "board.h"
 #include "lookup.h"
-#include "moves.h"
 #include "uai.h"
 #include "tests.h"
 
 int main() {
 
-	settings.init();
+    settings.init();
 
-	genLookupTables();
+    genLookupTables();
 
-	uai();
-	
-	return 0;
+    uai();
+
+    return 0;
 }

@@ -9,6 +9,8 @@
 
 #define MATE_SCORE 10000
 
-enum {BLUE, RED};
+#define FANCY_TT false
+
+enum { BLUE, RED };
 
 #endif // #ifndef MAIN_H_

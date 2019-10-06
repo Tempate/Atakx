@@ -8,8 +8,6 @@
 
 #define TURN_OFFSET 98
 
-int minSymmetry(std::array<Bitboard, 8> &symmetries);
-
 TT tt;
 
 // This table has been taken from:
@@ -80,6 +78,7 @@ uint64_t TT::perft(Board &board, const int depth, const bool symmetry) {
     if (depth == 1)
         return board.countMoves();
 
+    board.genKey(symmetry);
     Entry entry = get(board.key);
 
     if (board.key == entry.key && entry.depth == depth)
@@ -105,17 +104,13 @@ uint64_t TT::perft(Board &board, const int depth, const bool symmetry) {
 void Board::genKey(const bool symmetry) {
     key = 0;
 
-    Bitboard bbs[2];
+    std::array<Bitboard, 2> bbs;
 
     if (symmetry) {
-        std::array<Bitboard, 8> symmetries[2];
-        symmetries[BLUE] = pieces[BLUE].getSymmetries();
-        symmetries[RED] = pieces[RED].getSymmetries();
+        std::array<std::array<Bitboard, N_SYM>, 2> symmetries =
+            genBBSymmetries();
 
-        const int index = minSymmetry(symmetries[BLUE]);
-
-        bbs[BLUE] = symmetries[BLUE][index];
-        bbs[RED] = symmetries[RED][index];
+        bbs = pickSymmetry(symmetries);
     } else {
         bbs[BLUE] = pieces[BLUE];
         bbs[RED] = pieces[RED];
@@ -135,16 +130,21 @@ void Board::genKey(const bool symmetry) {
     key ^= randomKeys[TURN_OFFSET + turn];
 }
 
-int minSymmetry(std::array<Bitboard, 8> &symmetries) {
-    Bitboard min = symmetries[0];
+std::array<Bitboard, 2>
+pickSymmetry(const std::array<std::array<Bitboard, N_SYM>, 2> &symmetries) {
+    std::array<Bitboard, 2> min = {symmetries[BLUE][0], symmetries[RED][0]};
+
     int index = 0;
 
-    for (int i = 1; i < 8; ++i) {
-        if (symmetries[i] < min) {
-            min = symmetries[i];
+    for (int i = 1; i < N_SYM; ++i) {
+        if ((symmetries[BLUE][i] < min[BLUE]) ||
+            (symmetries[BLUE][i] == min[BLUE] &&
+             symmetries[RED][i] < min[RED])) {
+            min[BLUE] = symmetries[BLUE][i];
+            min[RED] = symmetries[RED][i];
             index = i;
         }
     }
 
-    return index;
+    return min;
 }

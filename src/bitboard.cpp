@@ -29,10 +29,7 @@ Bitboard Bitboard::flipDiagonally() const {
            ((value << 36) & 0x040000000000);
 }
 
-Bitboard Bitboard::rotate() const {
-    Bitboard x = flipDiagonally();
-    return x.flipVertically();
-}
+Bitboard Bitboard::rotate() const { return flipDiagonally().flipVertically(); }
 
 std::array<Bitboard, 8> Bitboard::getSymmetries() const {
     std::array<Bitboard, 8> symmetries;
@@ -48,26 +45,6 @@ std::array<Bitboard, 8> Bitboard::getSymmetries() const {
         symmetries[i] = symmetries[i - 1].rotate();
 
     return symmetries;
-}
-
-Bitboard Bitboard::minSymmetry() const {
-    Bitboard bb = *this;
-    Bitboard aux = bb;
-
-    for (int i = 0; i < 3; ++i) {
-        aux = aux.rotate();
-        bb = std::min(aux, bb);
-    }
-
-    aux = aux.flipVertically();
-    bb = std::min(aux, bb);
-
-    for (int i = 0; i < 3; ++i) {
-        aux = aux.rotate();
-        bb = std::min(aux, bb);
-    }
-
-    return bb;
 }
 
 void Bitboard::print() const {

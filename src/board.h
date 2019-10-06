@@ -47,7 +47,9 @@ public:
     uint64_t ttPerft(int depth) const;
 
     void genKey(const bool symmetry);
-    std::array<Board, 8> genSymmetries();
+
+    std::array<Board, N_SYM> genSymmetries();
+    std::array<std::array<Bitboard, N_SYM>, 2> genBBSymmetries();
 };
 
 constexpr static inline int getRank(const int sqr) { return sqr / RANKS; }

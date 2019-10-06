@@ -26,7 +26,6 @@ public:
     Bitboard rotate() const;
 
     std::array<Bitboard, 8> getSymmetries() const;
-    Bitboard minSymmetry() const;
 
     void print() const;
 

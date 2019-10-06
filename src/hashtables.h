@@ -66,4 +66,7 @@ public:
 
 extern TT tt;
 
+std::array<Bitboard, 2>
+pickSymmetry(const std::array<std::array<Bitboard, N_SYM>, 2> &symmetries);
+
 #endif // #ifndef HASHTABLES_H_

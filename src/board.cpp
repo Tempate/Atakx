@@ -51,33 +51,6 @@ void Board::random() {
     genKey(FANCY_TT);
 }
 
-std::array<Board, 8> Board::genSymmetries() {
-    std::array<Board, 8> symmetries;
-
-    symmetries[0] = *this;
-
-    for (int i = 1; i < 4; ++i) {
-        symmetries[i] = symmetries[i - 1];
-        symmetries[i].pieces[BLUE] = symmetries[i - 1].pieces[BLUE].rotate();
-        symmetries[i].pieces[RED] = symmetries[i - 1].pieces[RED].rotate();
-        symmetries[i].empty = symmetries[i - 1].empty.rotate();
-    }
-
-    symmetries[4] = symmetries[0];
-    symmetries[4].pieces[BLUE] = pieces[BLUE].flipVertically();
-    symmetries[4].pieces[RED] = pieces[RED].flipVertically();
-    symmetries[4].empty = empty.flipVertically();
-
-    for (int i = 5; i < 8; ++i) {
-        symmetries[i] = symmetries[i - 1];
-        symmetries[i].pieces[BLUE] = symmetries[i - 1].pieces[BLUE].rotate();
-        symmetries[i].pieces[RED] = symmetries[i - 1].pieces[RED].rotate();
-        symmetries[i].empty = symmetries[i - 1].empty.rotate();
-    }
-
-    return symmetries;
-}
-
 void Board::startpos() { fromFen("x5o/7/7/7/7/7/o5x x"); }
 
 // TODO: accept null blocks
@@ -326,6 +299,38 @@ uint64_t Board::perft(int depth) const {
     }
 
     return nodes;
+}
+
+std::array<Board, N_SYM> Board::genSymmetries() {
+    std::array<Board, N_SYM> symmetries;
+
+    std::array<std::array<Bitboard, N_SYM>, 2> bbSymmetries = genBBSymmetries();
+
+    for (int i = 0; i < N_SYM; ++i) {
+        symmetries[i].pieces[BLUE] = bbSymmetries[BLUE][i];
+        symmetries[i].pieces[RED] = bbSymmetries[RED][i];
+
+        symmetries[i].empty = ~(bbSymmetries[BLUE][i] | bbSymmetries[RED][i]);
+        symmetries[i].gaps = gaps;
+
+        symmetries[i].turn = turn;
+        symmetries[i].opponent = opponent;
+    }
+
+    return symmetries;
+}
+
+std::array<std::array<Bitboard, N_SYM>, 2> Board::genBBSymmetries() {
+    std::array<std::array<Bitboard, N_SYM>, 2> symmetries;
+
+    for (int color = BLUE; color <= RED; ++color) {
+        symmetries[color][0] = pieces[color];
+        symmetries[color][1] = symmetries[color][0].rotate().rotate();
+        symmetries[color][2] = pieces[color].flipDiagonally();
+        symmetries[color][3] = symmetries[color][2].rotate().rotate();
+    }
+
+    return symmetries;
 }
 
 void addMoves(std::vector<Move> &moves, Bitboard &bb, const int from,

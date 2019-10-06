@@ -3,6 +3,7 @@
 
 void testMatesInOne();
 void testKeySymmetries();
+void testPickSymmetry();
 void testTTPerft();
 
 #endif // #ifndef TESTS_H_

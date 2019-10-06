@@ -9,6 +9,8 @@
 
 #define MATE_SCORE 10000
 
+#define N_SYM 4
+
 #define FANCY_TT false
 
 enum { BLUE, RED };

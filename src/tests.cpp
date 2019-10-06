@@ -1,3 +1,4 @@
+#include <array>
 #include <chrono>
 #include <iostream>
 #include <string>
@@ -29,10 +30,13 @@ void testMatesInOne() {
 }
 
 void testKeySymmetries() {
-    static const int N = 100000;
+    static const int N = 10000000;
 
     int success = 0;
     int collisions = 0;
+
+    const int nKeys = N * N_SYM;
+    std::array<uint64_t, nKeys> keys;
 
     bool exit = false;
 
@@ -41,18 +45,40 @@ void testKeySymmetries() {
         board.random();
         board.genKey(true);
 
-        std::array<Board, 8> symmetries = board.genSymmetries();
+        std::array<Board, N_SYM> symmetries = board.genSymmetries();
         const uint64_t key = board.key;
 
-        for (Board &sym : symmetries) {
-            sym.genKey(true);
+        for (int j = 0; j < N_SYM; ++j) {
+            symmetries[j].genKey(true);
+            keys[i * N_SYM + j] = symmetries[j].key;
 
-            if (sym.key != key) {
+            if (symmetries[j].key != key) {
                 board.print();
+
+                /*
+                std::array<std::array<Bitboard, N_SYM>, 2> boardSym =
+                    board.genBBSymmetries();
+
+                int index = pickSymmetry(boardSym[BLUE]);
+
+                boardSym[BLUE][index].print();
+                boardSym[RED][index].print();
+                */
+
                 std::cout << board.key << std::endl;
 
-                sym.print();
-                std::cout << sym.key << std::endl;
+                symmetries[j].print();
+
+                /*
+                boardSym = symmetries[j].genBBSymmetries();
+
+                index = pickSymmetry(boardSym[BLUE]);
+
+                boardSym[BLUE][index].print();
+                boardSym[RED][index].print();
+                */
+
+                std::cout << symmetries[j].key << "\n" << std::endl;
 
                 exit = true;
                 break;
@@ -60,29 +86,43 @@ void testKeySymmetries() {
                 success++;
         }
 
-        std::vector<Move> moves = board.genMoves();
+        for (int i = 0; i < nKeys; ++i) {
+            const uint64_t key = keys[i];
 
-        for (const Move &move : moves) {
-            Board copy = board;
-            copy.make(move);
-            copy.genKey(true);
-
-            if (copy.key == key) {
-                std::cout << "[-] There has been a collision." << std::endl;
-
-                board.print();
-                std::cout << board.key << std::endl;
-
-                copy.print();
-                std::cout << copy.key << std::endl;
-
-                collisions++;
-            }
+            for (int j = i + 1; j < nKeys; ++j)
+                collisions;
         }
     }
 
     std::cout << "Succeeded: " << success << std::endl;
-    std::cout << "Collisions: " << double(collisions) / N << "%" << std::endl;
+    std::cout << "Collisions: " << double(collisions) / nKeys << "%"
+              << std::endl;
+}
+
+void testPickSymmetry() {
+    Board board{};
+    board.random();
+
+    std::array<std::array<Bitboard, N_SYM>, 2> symmetries =
+        board.genBBSymmetries();
+
+    for (int i = 0; i < N_SYM; ++i) {
+        std::cout << "blue" << std::endl;
+        symmetries[BLUE][i].print();
+
+        std::cout << "red" << std::endl;
+        symmetries[RED][i].print();
+    }
+
+    std::array<Bitboard, 2> bbs = pickSymmetry(symmetries);
+
+    std::cout << "Picked symmetries\n" << std::endl;
+
+    std::cout << "blue" << std::endl;
+    bbs[BLUE].print();
+
+    std::cout << "red" << std::endl;
+    bbs[RED].print();
 }
 
 void testTTPerft() {
@@ -90,7 +130,7 @@ void testTTPerft() {
 
     Board board{};
 
-    static const int depth = 7;
+    static const int depth = 8;
 
     std::cout << "Depth " << depth << std::endl;
 

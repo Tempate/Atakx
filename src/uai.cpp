@@ -47,20 +47,17 @@ void uai() {
             go(board, msg.substr(3));
         else if (cmd.compare("print") == 0)
             board.print();
-        else if (cmd.compare("perft") == 0) {
+        else if (cmd.compare("perft") == 0)
             perft(board, std::stoi(msg.substr(6)));
-        } else if (cmd.compare("quit") == 0)
+        else if (cmd.compare("quit") == 0)
             break;
     }
 }
 
-// Lets the GUI know the engine is ready. Serves as a ping.
 void isready() { std::cout << "readyok" << std::endl; }
 
-/*
- * Sets the board to a certain position
- * position (startpos | fen) (moves e2e4 c7c5)?
- */
+// Sets the board to a certain position
+// position (startpos | fen? <fen>) (moves e2e4 c7c5)?
 void position(Board &board, const std::string &s) {
     std::string cmd;
     std::stringstream ss(s);

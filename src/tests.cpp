@@ -29,6 +29,31 @@ void testMatesInOne() {
     }
 }
 
+// Performs all bitboard transformation on a default bitboard.
+void testTransformations() {
+    Bitboard bb = Bitboard((uint64_t)0x791121c28922);
+
+    bb.print();
+
+    std::cout << "\nFlip Vertically" << std::endl;
+    bb.flipVertically().print();
+
+    std::cout << "\nFlip Horizontally" << std::endl;
+    bb.flipHorizontally().print();
+
+    std::cout << "\nFlip Diagonally" << std::endl;
+    bb.flipDiagonally().print();
+
+    std::cout << "\nRotate 90 degrees" << std::endl;
+    bb.rotate90().print();
+
+    std::cout << "\nRotate 180 degrees" << std::endl;
+    bb.rotate180().print();
+}
+
+// Computes the key for N random boards.
+// It makes sure the key matches for all of the boards' symmetries
+// and checks how many collisions were there.
 void testKeySymmetries() {
     static const int N = 10000000;
 
@@ -54,30 +79,9 @@ void testKeySymmetries() {
 
             if (symmetries[j].key != key) {
                 board.print();
-
-                /*
-                std::array<std::array<Bitboard, N_SYM>, 2> boardSym =
-                    board.genBBSymmetries();
-
-                int index = pickSymmetry(boardSym[BLUE]);
-
-                boardSym[BLUE][index].print();
-                boardSym[RED][index].print();
-                */
-
                 std::cout << board.key << std::endl;
 
                 symmetries[j].print();
-
-                /*
-                boardSym = symmetries[j].genBBSymmetries();
-
-                index = pickSymmetry(boardSym[BLUE]);
-
-                boardSym[BLUE][index].print();
-                boardSym[RED][index].print();
-                */
-
                 std::cout << symmetries[j].key << "\n" << std::endl;
 
                 exit = true;
@@ -99,6 +103,9 @@ void testKeySymmetries() {
               << std::endl;
 }
 
+// Tests if the pick symmetry function is working correctly.
+// It works by generating a random board, producing all symmetries,
+// and choosing the picked one, displaying every step on the console.
 void testPickSymmetry() {
     Board board{};
     board.random();
@@ -125,6 +132,10 @@ void testPickSymmetry() {
     bbs[RED].print();
 }
 
+// Runs three perfts for the initial position,
+// the first one is the normal perft,
+// the second one is a tt perft,
+// and the third one is a tt perft with key symmetries.
 void testTTPerft() {
     using namespace std::chrono;
 

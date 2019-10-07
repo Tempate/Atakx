@@ -30,9 +30,13 @@ void Board::blank() {
     key = 0;
 
     turn = BLUE;
-    opponent = RED;
 }
 
+// Generates a random empty board and
+// assigns the other squares randomly to each player.
+// Therefore, the generated board will approximately have
+// 50% free squares, 25% blue pieces and 25% red pieces.
+// The generated board will have no gaps.
 void Board::random() {
     empty.random();
 
@@ -46,7 +50,6 @@ void Board::random() {
         } while (bb.unsetLSB());
 
     turn = rand() % 2;
-    opponent = turn ^ 1;
 
     genKey(FANCY_TT);
 }
@@ -60,11 +63,17 @@ void Board::fromFen(const std::string &fen) {
 
     blank();
 
-    for (char c : fen) {
+    std::string boardString;
+    char turnChar;
+    std::string plyString;
+
+    std::stringstream ss(fen);
+    ss >> boardString;
+    ss >> turnChar;
+    ss >> plyString;
+
+    for (char c : boardString) {
         switch (c) {
-        case ' ':
-            inBounds = false;
-            break;
         case '/':
             file = 0;
             --rank;
@@ -82,33 +91,48 @@ void Board::fromFen(const std::string &fen) {
         case 'X':
         case 'b':
         case 'B':
-            if (inBounds)
-                pieces[BLUE] |= Bitboard{file, rank};
-
-            turn = BLUE;
+            pieces[BLUE] |= Bitboard{file, rank};
             ++file;
             break;
         case 'o':
         case 'O':
         case 'w':
         case 'W':
-            if (inBounds)
-                pieces[RED] |= Bitboard{file, rank};
-
-            turn = RED;
+            pieces[RED] |= Bitboard{file, rank};
             ++file;
             break;
         case '-':
-            if (inBounds)
-                gaps |= Bitboard{file, rank};
-
+            gaps |= Bitboard{file, rank};
             ++file;
             break;
+        default:
+            std::cout << "[-] Unknown character on board's fen: " << c
+                      << std::endl;
+            exit(0);
         }
     }
 
+    switch (turnChar) {
+    case 'x':
+    case 'X':
+    case 'b':
+    case 'B':
+        turn = BLUE;
+        break;
+    case 'o':
+    case 'O':
+    case 'w':
+    case 'W':
+        turn = RED;
+        break;
+    default:
+        std::cout << "[-] Unknown turn character: " << turnChar << std::endl;
+        exit(0);
+    }
+
+    ply = std::stoi(plyString);
+
     empty = ~(pieces[BLUE] | pieces[RED] | gaps);
-    opponent = turn ^ 1;
 
     genKey(FANCY_TT);
 }
@@ -151,11 +175,15 @@ std::string Board::toFen() const {
     }
 
     fen += ' ';
-    fen += players[turn];
+    fen += turn;
+    fen += ' ';
+    fen += ply;
 
     return fen;
 }
 
+// The average number of moves in an ataxx
+// position is 32.
 std::vector<Move> Board::genMoves() const {
     std::vector<Move> moves;
     moves.reserve(32);
@@ -178,6 +206,9 @@ std::vector<Move> Board::genMoves() const {
     return moves;
 }
 
+// Counts the moves in a given position without
+// adding them to the move list.
+// This function is only used on perft.
 int Board::countMoves() const {
     int nMoves = 0;
 
@@ -200,6 +231,8 @@ int Board::countMoves() const {
 }
 
 void Board::make(const Move &move) {
+    const int opponent = turn ^ 1;
+
     if (move.type != NULL_MOVE) {
         pieces[turn] ^= Bitboard{move.to};
 
@@ -214,8 +247,8 @@ void Board::make(const Move &move) {
         empty = ~(pieces[BLUE] | pieces[RED] | gaps);
     }
 
-    turn ^= 1;
-    opponent ^= 1;
+    turn = opponent;
+    ++ply;
 }
 
 void Board::print() const {
@@ -243,6 +276,8 @@ void Board::print() const {
               << std::endl;
 }
 
+// Gets a list of moves in the form of a string
+// and plays them out.
 void Board::playSequence(const std::string &movesString) {
     std::stringstream s(movesString);
     std::string moveString;
@@ -254,19 +289,14 @@ void Board::playSequence(const std::string &movesString) {
 }
 
 int Board::eval() const {
-    if (pieces[turn].popCount() == 0)
-        return -MATE_SCORE;
-
-    if (pieces[opponent].popCount() == 0)
-        return MATE_SCORE;
-
-    return pieces[turn].popCount() - pieces[opponent].popCount();
+    return pieces[turn].popCount() - pieces[turn ^ 1].popCount();
 }
 
 int Board::score() const {
     int ownPieces = pieces[turn].popCount();
-    int otherPieces = pieces[opponent].popCount();
+    int otherPieces = pieces[turn ^ 1].popCount();
 
+    // This could be done without branching
     if (ownPieces > otherPieces)
         return MATE_SCORE;
     else if (otherPieces > ownPieces)
@@ -276,18 +306,16 @@ int Board::score() const {
 }
 
 uint64_t Board::perft(int depth) const {
-
+    // Bulk counting
     if (depth == 1)
         return countMoves();
 
     std::vector<Move> moves = genMoves();
 
-    // If there are still empty squares and
-    // there are no moves, pass the turn.
-    /*
+    // If there are no moves and there are
+    // empty squares, add a null move.
     if (moves.size() == 0 && empty)
         moves.emplace_back();
-    */
 
     uint64_t nodes = 0;
 
@@ -301,6 +329,7 @@ uint64_t Board::perft(int depth) const {
     return nodes;
 }
 
+// Generates an array of symmetrical boards.
 std::array<Board, N_SYM> Board::genSymmetries() {
     std::array<Board, N_SYM> symmetries;
 
@@ -314,20 +343,21 @@ std::array<Board, N_SYM> Board::genSymmetries() {
         symmetries[i].gaps = gaps;
 
         symmetries[i].turn = turn;
-        symmetries[i].opponent = opponent;
+        symmetries[i].ply = ply;
     }
 
     return symmetries;
 }
 
+// Generates the symmetries for both piece bitboards.
 std::array<std::array<Bitboard, N_SYM>, 2> Board::genBBSymmetries() {
     std::array<std::array<Bitboard, N_SYM>, 2> symmetries;
 
     for (int color = BLUE; color <= RED; ++color) {
         symmetries[color][0] = pieces[color];
-        symmetries[color][1] = symmetries[color][0].rotate().rotate();
+        symmetries[color][1] = symmetries[color][0].rotate180();
         symmetries[color][2] = pieces[color].flipDiagonally();
-        symmetries[color][3] = symmetries[color][2].rotate().rotate();
+        symmetries[color][3] = symmetries[color][2].rotate180();
     }
 
     return symmetries;

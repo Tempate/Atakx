@@ -2,6 +2,7 @@
 #define TESTS_H_
 
 void testMatesInOne();
+void testTransformations();
 void testKeySymmetries();
 void testPickSymmetry();
 void testTTPerft();

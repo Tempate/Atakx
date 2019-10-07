@@ -17,7 +17,7 @@ public:
     Bitboard gaps;
 
     int turn;
-    int opponent;
+    int ply;
 
     uint64_t key;
 

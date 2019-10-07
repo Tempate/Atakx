@@ -22,8 +22,10 @@ public:
     void random();
 
     Bitboard flipVertically() const;
+    Bitboard flipHorizontally() const;
     Bitboard flipDiagonally() const;
-    Bitboard rotate() const;
+    Bitboard rotate90() const;
+    Bitboard rotate180() const;
 
     std::array<Bitboard, 8> getSymmetries() const;
 

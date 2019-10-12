@@ -1,17 +1,10 @@
-#include <array>
-#include <iostream>
 #include <sstream>
-#include <vector>
 
-#include "bitboard.h"
-#include "board.h"
 #include "hashtables.h"
 #include "lookup.h"
-#include "main.h"
-#include "moves.h"
+#include "uai.h"
 
-void addMoves(std::vector<Move> &moves, Bitboard &bb, const int from,
-              const int type);
+#include "board.h"
 
 Board::Board() {
     blank();
@@ -42,21 +35,18 @@ void Board::random() {
 
     Bitboard bb = ~empty;
 
-    if (bb)
-        do {
-            const int sqr = bb.bitScanForward();
-            const int color = rand() % 2;
-            pieces[color] |= Bitboard{sqr};
-        } while (bb.unsetLSB());
+    for (int sqr : bb) {
+        const int color = rand() % 2;
+        pieces[color] |= Bitboard{sqr};
+    }
 
     turn = rand() % 2;
 
     genKey(FANCY_TT);
 }
 
-void Board::startpos() { fromFen("x5o/7/7/7/7/7/o5x x"); }
+void Board::startpos() { fromFen("x5o/7/7/7/7/7/o5x x 0"); }
 
-// TODO: accept null blocks
 void Board::fromFen(const std::string &fen) {
     int rank = RANKS - 1, file = 0;
     int inBounds = true;
@@ -68,9 +58,19 @@ void Board::fromFen(const std::string &fen) {
     std::string plyString;
 
     std::stringstream ss(fen);
-    ss >> boardString;
-    ss >> turnChar;
-    ss >> plyString;
+
+    if (!(ss >> boardString)) {
+        std::cout << "[-] Fen string is blank" << std::endl;
+        exit(0);
+    }
+
+    if (!(ss >> turnChar)) {
+        std::cout << "[-] No turn found on fen: " << fen << std::endl;
+        exit(0);
+    }
+
+    if (ss >> plyString)
+        ply = std::stoi(plyString);
 
     for (char c : boardString) {
         switch (c) {
@@ -129,8 +129,6 @@ void Board::fromFen(const std::string &fen) {
         std::cout << "[-] Unknown turn character: " << turnChar << std::endl;
         exit(0);
     }
-
-    ply = std::stoi(plyString);
 
     empty = ~(pieces[BLUE] | pieces[RED] | gaps);
 
@@ -191,17 +189,23 @@ std::vector<Move> Board::genMoves() const {
     Bitboard bb = pieces[turn];
     Bitboard sMoves;
 
-    if (bb)
-        do {
-            int sqr = bb.bitScanForward();
-            sMoves |= singlesLookup[sqr] & empty;
+    for (int sqr : bb) {
+        sMoves |= singlesLookup[sqr] & empty;
 
-            Bitboard dMoves = doublesLookup[sqr] & empty;
-            addMoves(moves, dMoves, sqr, DOUBLE);
+        Bitboard dMoves = doublesLookup[sqr] & empty;
 
-        } while (bb.unsetLSB());
+        // Add double moves
+        for (int to : dMoves)
+            moves.emplace_back(sqr, to, DOUBLE);
+    }
 
-    addMoves(moves, sMoves, 0, SINGLE);
+    // Add single moves
+    for (int to : sMoves)
+        moves.emplace_back(to);
+
+    // Adds a null move in case there are no other moves.
+    if (moves.size() == 0)
+        moves.emplace_back();
 
     return moves;
 }
@@ -215,15 +219,12 @@ int Board::countMoves() const {
     Bitboard bb = pieces[turn];
     Bitboard sMoves;
 
-    if (bb)
-        do {
-            int sqr = bb.bitScanForward();
-            sMoves |= singlesLookup[sqr] & empty;
+    for (int sqr : bb) {
+        sMoves |= singlesLookup[sqr] & empty;
 
-            Bitboard dMoves = doublesLookup[sqr] & empty;
-            nMoves += dMoves.popCount();
-
-        } while (bb.unsetLSB());
+        Bitboard dMoves = doublesLookup[sqr] & empty;
+        nMoves += dMoves.popCount();
+    }
 
     nMoves += sMoves.popCount();
 
@@ -305,17 +306,35 @@ int Board::score() const {
         return 0;
 }
 
+// Returns the state of the game:
+//      1   won
+//      0.5 draw
+//      0   lost
+// In any other case it returns NOT_FINISHED
+float Board::state() const {
+    if (!pieces[turn])
+        return 0;
+    else if (!pieces[turn ^ 1])
+        return 1;
+    else if (empty)
+        return NOT_FINISHED;
+
+    const int a = pieces[turn].popCount();
+    const int b = pieces[turn ^ 1].popCount();
+
+    assert(a != b);
+
+    const int score = (a > b) ? 1 : 0;
+
+    return score;
+}
+
 uint64_t Board::perft(int depth) const {
     // Bulk counting
     if (depth == 1)
         return countMoves();
 
     std::vector<Move> moves = genMoves();
-
-    // If there are no moves and there are
-    // empty squares, add a null move.
-    if (moves.size() == 0 && empty)
-        moves.emplace_back();
 
     uint64_t nodes = 0;
 
@@ -363,11 +382,28 @@ std::array<std::array<Bitboard, N_SYM>, 2> Board::genBBSymmetries() {
     return symmetries;
 }
 
-void addMoves(std::vector<Move> &moves, Bitboard &bb, const int from,
-              const int type) {
-    if (bb)
-        do {
-            const int to = bb.bitScanForward();
-            moves.emplace_back(from, to, type);
-        } while (bb.unsetLSB());
+std::chrono::high_resolution_clock::time_point Board::timeManagement(
+    std::chrono::high_resolution_clock::time_point start) const {
+    using namespace std::chrono;
+
+    high_resolution_clock::duration movetime = milliseconds(0);
+
+    if (settings.movetime)
+        return start + milliseconds(settings.movetime);
+
+    clock_t remaining, increment;
+
+    if (turn == BLUE) {
+        remaining = settings.wtime;
+        increment = settings.winc;
+    } else {
+        remaining = settings.btime;
+        increment = settings.binc;
+    }
+
+    if (remaining || increment)
+        movetime = milliseconds(
+            std::min(remaining >> 2, (remaining >> 5) + increment));
+
+    return start + movetime;
 }

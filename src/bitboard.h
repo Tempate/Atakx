@@ -1,10 +1,28 @@
 #ifndef BITBOARD_H_
 #define BITBOARD_H_
 
-#include <array>
 #include <cinttypes>
 
 #include "main.h"
+
+class BitScanner {
+private:
+    uint64_t data;
+
+public:
+    constexpr BitScanner(const uint64_t &value) : data{value} {}
+
+    constexpr int operator*() const noexcept { return __builtin_ctzll(data); }
+
+    constexpr BitScanner operator++() noexcept {
+        data &= data - 1;
+        return *this;
+    }
+
+    constexpr bool operator!=(const BitScanner &bs) const noexcept {
+        return data != bs.data;
+    }
+};
 
 class Bitboard {
 public:
@@ -90,6 +108,8 @@ public:
         return value > bb.value;
     }
 
+    constexpr bool operator>(const uint64_t n) const { return value > n; }
+
     constexpr operator bool() const { return value; }
 
     constexpr inline int popCount() const {
@@ -103,6 +123,10 @@ public:
     constexpr inline int bitScanReverse() const {
         return 48 - __builtin_clzll(value);
     }
+
+    constexpr BitScanner begin() const noexcept { return BitScanner{value}; }
+
+    constexpr BitScanner end() const noexcept { return BitScanner{0}; }
 
     constexpr inline uint64_t lsbBB() const { return value & -value; }
 

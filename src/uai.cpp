@@ -1,12 +1,10 @@
-#include <chrono>
-#include <iostream>
 #include <sstream>
 #include <string>
-#include <vector>
 
+#include "alphabeta.h"
 #include "board.h"
 #include "main.h"
-#include "search.h"
+
 #include "uai.h"
 
 Settings settings;
@@ -21,14 +19,21 @@ pthread_t worker;
 int working = 0;
 
 void uai() {
-    std::cout << "id name " << ENGINE_NAME << std::endl;
-    std::cout << "id author " << ENGINE_AUTHOR << std::endl;
-    std::cout << "uaiok" << std::endl;
-
     Board board;
 
     std::string cmd;
     std::string msg;
+
+    while (1) {
+        getline(std::cin, msg);
+
+        if (msg.compare("uai") == 0) {
+            std::cout << "id name " << ENGINE_NAME << std::endl;
+            std::cout << "id author " << ENGINE_AUTHOR << std::endl;
+            std::cout << "uaiok" << std::endl;
+            break;
+        }
+    }
 
     while (1) {
         getline(std::cin, msg);
@@ -124,21 +129,30 @@ void perft(const Board &board, const int depth) {
 }
 
 void bestmove(const Board &board) {
-    Move bestMove = search(board);
+    Move bestMove;
+
+    if (TYPE == RANDOM_PLAYER) {
+        std::vector<Move> moves = board.genMoves();
+        bestMove = moves[rand() % moves.size()];
+    }
+
+    else if (TYPE == ALPHABETA)
+        bestMove = abSearch(board);
+
     std::cout << "bestmove " << bestMove.toString() << std::endl;
 }
 
 void infoString(const int depth, const int score, const uint64_t nodes,
-                const int duration, std::vector<Move> pv) {
+                const double duration, std::vector<Move> pv) {
     std::cout << "info depth " << depth << " score cp " << score << " nodes "
               << nodes << " time " << duration;
 
     if (duration > 0)
-        std::cout << " nps " << 1000 * nodes / duration;
+        std::cout << " nps " << (int)nodes / duration;
 
     std::cout << " pv";
 
-    for (Move move : pv)
+    for (const Move &move : pv)
         std::cout << " " << move.toString();
 
     std::cout << std::endl;

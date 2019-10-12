@@ -1,10 +1,10 @@
 #include <algorithm>
-#include <cassert>
 
 #include "bitboard.h"
 #include "board.h"
-#include "hashtables.h"
 #include "main.h"
+
+#include "hashtables.h"
 
 #define TURN_OFFSET 98
 

@@ -1,8 +1,6 @@
 #ifndef HASHTABLES_H_
 #define HASHTABLES_H_
 
-#include <array>
-#include <cinttypes>
 #include <string>
 
 #include "board.h"

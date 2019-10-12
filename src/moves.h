@@ -4,16 +4,20 @@
 #include <string>
 
 #include "bitboard.h"
+#include "main.h"
 
 enum { NULL_MOVE, SINGLE, DOUBLE };
 
 struct Move {
     int from;
     int to;
+
     int type;
     int score;
 
     Move() : type(NULL_MOVE) {}
+
+    Move(int to) : to(to), type(SINGLE) {}
 
     Move(int from, int to, int type) : from(from), to(to), type(type) {}
 
@@ -52,6 +56,8 @@ struct Move {
 
         return move;
     }
+
+    void print() const { std::cout << toString() << std::endl; }
 
     constexpr bool operator==(const Move &move) const {
         if (type == SINGLE)

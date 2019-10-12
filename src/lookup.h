@@ -1,6 +1,8 @@
 #ifndef LOOKUP_H_
 #define LOOKUP_H_
 
+#include "bitboard.h"
+
 void genLookupTables(void);
 
 extern Bitboard singlesLookup[49];

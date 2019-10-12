@@ -1,14 +1,11 @@
-#include <array>
-#include <chrono>
-#include <iostream>
 #include <string>
 #include <tuple>
-#include <vector>
 
+#include "alphabeta.h"
 #include "board.h"
 #include "hashtables.h"
 #include "moves.h"
-#include "search.h"
+
 #include "tests.h"
 
 void testMatesInOne() {
@@ -17,10 +14,10 @@ void testMatesInOne() {
         std::make_tuple("7/7/7/7/1o5/ox5/1ooo3 x", Move{"c2"})};
 
     for (const auto &[fen, sol] : mates) {
-        Board board(fen);
+        const Board board(fen);
         board.print();
 
-        Move move = search(board);
+        const Move move = abSearch(board);
 
         std::cout << (move.to == sol.to ? "PASS" : "ERROR");
         std::cout << " " << sol.toString() << " " << move.toString()
@@ -31,7 +28,7 @@ void testMatesInOne() {
 
 // Performs all bitboard transformation on a default bitboard.
 void testTransformations() {
-    Bitboard bb = Bitboard((uint64_t)0x791121c28922);
+    const Bitboard bb = Bitboard((uint64_t)0x791121c28922);
 
     bb.print();
 

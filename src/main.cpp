@@ -1,13 +1,16 @@
-#include <iostream>
+#include <sstream>
 #include <string>
 
-#include "bitboard.h"
 #include "board.h"
 #include "lookup.h"
 #include "tests.h"
 #include "uai.h"
 
+#include "main.h"
+
 int main() {
+
+    srand(time(NULL));
 
     settings.init();
 

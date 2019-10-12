@@ -1,14 +1,15 @@
 #ifndef BOARD_H_
 #define BOARD_H_
 
-#include <array>
+#include <chrono>
 #include <cinttypes>
 #include <string>
-#include <vector>
 
 #include "bitboard.h"
 #include "main.h"
 #include "moves.h"
+
+#define NOT_FINISHED 100
 
 class Board {
 public:
@@ -42,6 +43,7 @@ public:
 
     int eval() const;
     int score() const;
+    float state() const;
 
     uint64_t perft(int depth) const;
     uint64_t ttPerft(int depth) const;
@@ -50,10 +52,12 @@ public:
 
     std::array<Board, N_SYM> genSymmetries();
     std::array<std::array<Bitboard, N_SYM>, 2> genBBSymmetries();
+
+    std::chrono::high_resolution_clock::time_point
+    timeManagement(std::chrono::high_resolution_clock::time_point start) const;
 };
 
 constexpr static inline int getRank(const int sqr) { return sqr / RANKS; }
-
 constexpr static inline int getFile(const int sqr) { return sqr % FILES; }
 
 #endif /* BOARD_H_ */

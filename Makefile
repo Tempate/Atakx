@@ -1,11 +1,11 @@
 CXX           = g++
 FLAGS         = -std=c++17 -static
 RELEASE_FLAGS = $(FLAGS) -O3 -DNDEBUG -flto -march=native
-DEBUG_FLAGS   = $(FLAGS) -Wall -Wextra -g -gdwarf-2 -Wall -Wextra -pedantic
+DEBUG_FLAGS   = $(FLAGS) -O0 -Wall -Wextra -g -Wall -Wextra -pedantic
 
 LINKER  = g++
 
-EXEC    = Atakx
+EXEC    = Funes
 SRCDIR  = src
 OBJDIR  = obj
 BINDIR  = bin

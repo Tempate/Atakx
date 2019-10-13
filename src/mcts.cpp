@@ -58,7 +58,7 @@ Node& Node::expand() {
     Board copy = board;
     copy.make(move);
 
-    children.emplace_back(this, board, move);
+    children.emplace_back(this, copy, move);
 
     return children.back();
 }
@@ -70,13 +70,13 @@ Node* Node::bestChild(const float cp) {
     float highestScore = std::numeric_limits<float>::lowest();
 
     for (Node &child : children) {
-        const int score = ucbScore(this, child, cp);
+        const float score = ucbScore(this, child, cp);
 
         if (score > highestScore) {
             highestScore = score;
             bestChildren.clear();
             bestChildren.push_back(&child);
-        } else {
+        } else if (score == highestScore) {
             bestChildren.push_back(&child);
         }
     }
@@ -89,7 +89,7 @@ Node* Node::bestChild(const float cp) {
 float rollout(Node &node) {
     Board copy = node.board;
     float state = copy.state();
-
+   
     while (state == NOT_FINISHED) {
         std::vector<Move> moves = copy.genMoves();
 
@@ -100,6 +100,9 @@ float rollout(Node &node) {
 
         state = copy.state();
     }
+
+    if (node.board.turn == copy.turn)
+        state = 1 - state;
 
     return state;
 }
@@ -122,7 +125,7 @@ float ucbScore(const Node *parent, const Node &child, const float cp) {
         return std::numeric_limits<float>::max();
     
     const float exploitation = float(child.reward) / child.visits;
-    const float exploration = cp * sqrt(2.0 * log(parent->visits) / child.visits);
+    const float exploration = 2 * cp * sqrt(2.0 * log(parent->visits) / child.visits);
     
     return exploitation + exploration;
 }

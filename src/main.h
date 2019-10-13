@@ -9,7 +9,7 @@
 #include <iostream>
 #include <vector>
 
-#define DEBUG true
+#define DEBUG false
 
 enum { RANDOM_PLAYER, MOST_CAPTURES, ALPHABETA, MCTS };
 

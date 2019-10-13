@@ -37,12 +37,16 @@ struct Node {
     void display() const {
         board.print();
 
+        const float score = 100 * float(reward) / visits;
+        std::cout << "Reward: " << reward << " Visits: " << visits << std::endl;
+        std::cout << "Score: " << score << "\n" << std::endl;
+
         for (const Node &child : children)
             child.print();
     }
 
     Node& expand();
-    Node bestChild(const float cp) const;
+    Node* bestChild(const float cp);
 };
 
 #endif // #ifndef NODES_H_

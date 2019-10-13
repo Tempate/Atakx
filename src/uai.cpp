@@ -5,7 +5,7 @@
 #include "board.h"
 #include "hashtables.h"
 #include "alphabeta.h"
-#include "mcts_.h"
+#include "mcts.h"
 
 #include "uai.h"
 

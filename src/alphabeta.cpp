@@ -21,6 +21,7 @@ Stats stats;
 
 Move abSearch(const Board &board) {
     std::vector<Move> pv;
+    Move bestMove;
 
     const int alpha = -MATE_SCORE;
     const int beta = MATE_SCORE;
@@ -29,7 +30,11 @@ Move abSearch(const Board &board) {
 
     const high_resolution_clock::time_point start =
         high_resolution_clock::now();
-    const high_resolution_clock::time_point end = board.timeManagement(start);
+
+    high_resolution_clock::time_point end;
+    
+    if (settings.timed)
+        end = board.timeManagement(start);
 
     for (int depth = 1; depth <= settings.depth; ++depth) {
         const int score = alphabeta(board, pv, end, depth, alpha, beta);
@@ -42,14 +47,14 @@ Move abSearch(const Board &board) {
         if (settings.stop)
             break;
 
+        bestMove = pv.front();
+
         infoString(depth, score, settings.nodes, elapsed, pv);
     }
 
-    assert(pv.size() > 0);
-
     // std::cout << "TT Hits: " << stats.ttHits << std::endl;
 
-    return pv.front();
+    return bestMove;
 }
 
 int alphabeta(const Board &board, std::vector<Move> &pv,
@@ -58,7 +63,7 @@ int alphabeta(const Board &board, std::vector<Move> &pv,
     if (settings.stop)
         return 0;
 
-    if (settings.movetime && settings.nodes % 4096 == 0 &&
+    if (settings.timed && settings.nodes % 4096 == 0 &&
         high_resolution_clock::now() > end) {
         settings.stop = true;
         return 0;
@@ -73,10 +78,9 @@ int alphabeta(const Board &board, std::vector<Move> &pv,
 
     // Transposition Table
     if (entry.key == board.key && entry.depth == depth) {
-
-#ifdef DEBUG
-        ++stats.ttHits;
-#endif
+        #ifdef DEBUG
+            ++stats.ttHits;
+        #endif
 
         switch (entry.flag) {
         case LOWER_BOUND:
@@ -151,21 +155,24 @@ int alphabeta(const Board &board, std::vector<Move> &pv,
 }
 
 void sort(std::vector<Move> &moves) {
-    for (Move move : moves) {
+    for (Move &move : moves) {
         switch (move.type) {
-        case NULL_MOVE:
-            move.score = -100;
         case SINGLE:
             move.score = 100;
+            break;
         case DOUBLE:
             move.score = 0;
+            break;
         }
     }
 
-    insertionSort(moves);
+    if (moves.size() > 1)
+        insertionSort(moves);
 }
 
 void insertionSort(std::vector<Move> &moves) {
+    assert(moves.size() > 0);
+
     for (int i = 1; i < moves.size(); ++i) {
         int j = i - 1;
 

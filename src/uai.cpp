@@ -1,9 +1,11 @@
 #include <sstream>
 #include <string>
 
-#include "alphabeta.h"
-#include "board.h"
 #include "main.h"
+#include "board.h"
+#include "hashtables.h"
+#include "alphabeta.h"
+#include "mcts_.h"
 
 #include "uai.h"
 
@@ -42,9 +44,10 @@ void uai() {
 
         if (cmd.compare("isready") == 0)
             isready();
-        else if (cmd.compare("ucinewgame") == 0)
+        else if (cmd.compare("ucinewgame") == 0) {
             board.startpos();
-        else if (cmd.compare("position") == 0)
+            tt.clear();
+        } else if (cmd.compare("position") == 0)
             position(board, msg.substr(9));
         else if (cmd.compare("eval") == 0)
             board.eval();
@@ -88,8 +91,14 @@ void go(Board &board, const std::string &s) {
 
     settings.init();
 
-    if (cmd.compare("infinite") == 0)
+    if (cmd.compare("infinite") == 0) {
+        settings.timed = false;
         settings.depth = MAX_DEPTH;
+    } else if (cmd.compare("depth") == 0) {
+        settings.timed = false;
+        settings.depth = std::stoi(s.substr(6));
+    } 
+    
     else if (cmd.compare("wtime") == 0)
         settings.wtime = std::stoi(s.substr(6));
     else if (cmd.compare("btime") == 0)
@@ -98,8 +107,6 @@ void go(Board &board, const std::string &s) {
         settings.winc = std::stoi(s.substr(5));
     else if (cmd.compare("binc") == 0)
         settings.binc = std::stoi(s.substr(5));
-    else if (cmd.compare("depth") == 0)
-        settings.depth = std::stoi(s.substr(6));
     else if (cmd.compare("movetime") == 0)
         settings.movetime = std::stoi(s.substr(9));
 
@@ -136,8 +143,27 @@ void bestmove(const Board &board) {
         bestMove = moves[rand() % moves.size()];
     }
 
+    else if (TYPE == MOST_CAPTURES) {
+        std::vector<Move> moves = board.genMoves();
+
+        int record = 0;
+        bestMove = moves[0];
+
+        for (const Move &move : moves) {
+            const int captures = board.countCaptures(move);
+
+            if (captures > record) {
+                record = captures;
+                bestMove = move;
+            }
+        }
+    }
+
     else if (TYPE == ALPHABETA)
         bestMove = abSearch(board);
+
+    else if (TYPE == MCTS)
+        bestMove = uctSearch(board);
 
     std::cout << "bestmove " << bestMove.toString() << std::endl;
 }
@@ -147,8 +173,10 @@ void infoString(const int depth, const int score, const uint64_t nodes,
     std::cout << "info depth " << depth << " score cp " << score << " nodes "
               << nodes << " time " << duration;
 
-    if (duration > 0)
-        std::cout << " nps " << (int)nodes / duration;
+    if (duration > 0) {
+        const long nps = 1000 * nodes / duration;
+        std::cout << " nps " << nps;
+    }
 
     std::cout << " pv";
 

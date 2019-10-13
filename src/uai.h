@@ -20,6 +20,7 @@ struct Settings {
     int binc;
 
     int movetime;
+    bool timed;
 
     void init() {
         stop = false;
@@ -33,6 +34,8 @@ struct Settings {
         binc = 0;
 
         movetime = 0;
+
+        timed = true;
     }
 };
 

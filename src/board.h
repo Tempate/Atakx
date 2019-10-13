@@ -5,8 +5,8 @@
 #include <cinttypes>
 #include <string>
 
-#include "bitboard.h"
 #include "main.h"
+#include "bitboard.h"
 #include "moves.h"
 
 #define NOT_FINISHED 100
@@ -40,6 +40,7 @@ public:
     void print() const;
 
     void playSequence(const std::string &moves);
+    int countCaptures(const Move &move) const;
 
     int eval() const;
     int score() const;

@@ -289,6 +289,13 @@ void Board::playSequence(const std::string &movesString) {
     }
 }
 
+int Board::countCaptures(const Move &move) const {
+    assert(move.to >= 0 && move.to < 49);
+
+    const Bitboard captures = singlesLookup[move.to] & pieces[turn ^ 1];
+    return captures.popCount();
+}
+
 int Board::eval() const {
     return pieces[turn].popCount() - pieces[turn ^ 1].popCount();
 }

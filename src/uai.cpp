@@ -167,21 +167,3 @@ void bestmove(const Board &board) {
 
     std::cout << "bestmove " << bestMove.toString() << std::endl;
 }
-
-void infoString(const int depth, const int score, const uint64_t nodes,
-                const double duration, std::vector<Move> pv) {
-    std::cout << "info depth " << depth << " score cp " << score << " nodes "
-              << nodes << " time " << duration;
-
-    if (duration > 0) {
-        const long nps = 1000 * nodes / duration;
-        std::cout << " nps " << nps;
-    }
-
-    std::cout << " pv";
-
-    for (const Move &move : pv)
-        std::cout << " " << move.toString();
-
-    std::cout << std::endl;
-}

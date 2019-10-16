@@ -17,6 +17,9 @@ int alphabeta(const Board &board, std::vector<Move> &pv,
 void sort(std::vector<Move> &moves);
 void insertionSort(std::vector<Move> &moves);
 
+void infoString(const int depth, const int score, const uint64_t nodes,
+                const double elapsed, std::vector<Move> &pv);
+
 Stats stats;
 
 Move abSearch(const Board &board) {
@@ -110,8 +113,8 @@ int alphabeta(const Board &board, std::vector<Move> &pv,
 
         if (board.pieces[board.turn].popCount() == 0)
             return -MATE_SCORE;
-    } else
-        sort(moves);
+    } // else
+      //  sort(moves);
 
     const int prevAlpha = alpha;
 
@@ -183,4 +186,22 @@ void insertionSort(std::vector<Move> &moves) {
 
         moves[j + 1] = moves[i];
     }
+}
+
+void infoString(const int depth, const int score, const uint64_t nodes,
+                const double elapsed, std::vector<Move> &pv) {
+    std::cout << "info depth " << depth << " score " << score << " nodes "
+              << nodes << " time " << elapsed;
+
+    if (elapsed > 0) {
+        const long nps = 1000 * nodes / elapsed;
+        std::cout << " nps " << nps;
+    }
+
+    std::cout << " pv";
+
+    for (const Move &move : pv)
+        std::cout << " " << move.toString();
+
+    std::cout << std::endl;
 }

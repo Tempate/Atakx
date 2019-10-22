@@ -38,13 +38,15 @@ Move uctSearch(const Board &board) {
         backupNegamax(&node, reward);
     }
 
+    infoString(root, start);
+
     return root.bestChild(0)->move;
 }
 
 Node& treePolicy(Node *node) {
     static const float CP = 1 / sqrt(2);
 
-    while (node->board.state() == NOT_FINISHED) {
+    while (node->board.state(false) == NOT_FINISHED) {
         if (node->isExpanded == false)
             return node->expand();
 
@@ -97,7 +99,7 @@ Node* Node::bestChild(const float cp) {
 
 float rollout(Node &node) {
     Board copy = node.board;
-    float state = copy.state();
+    float state = copy.state(true);
    
     while (state == NOT_FINISHED) {
         std::vector<Move> moves = copy.genMoves();
@@ -130,7 +132,7 @@ float rollout(Node &node) {
         }
 
         copy.make(move);
-        state = copy.state();
+        state = copy.state(true);
     }
 
     if (node.board.turn == copy.turn)

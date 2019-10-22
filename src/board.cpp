@@ -180,8 +180,7 @@ std::string Board::toFen() const {
     return fen;
 }
 
-// The average number of moves in an ataxx
-// position is 32.
+// The average number of moves in an ataxx position is 32.
 std::vector<Move> Board::genMoves() const {
     std::vector<Move> moves;
     moves.reserve(32);
@@ -317,23 +316,40 @@ int Board::score() const {
 //      1   won
 //      0.5 draw
 //      0   lost
+
+// When adjudication is on, it'll consider a 
+// win those games where the tile difference 
+// is greater than the blank tiles.
+
 // In any other case it returns NOT_FINISHED
-float Board::state() const {
+float Board::state(const bool adjudicate) const {
     if (!pieces[turn])
         return 0;
-    else if (!pieces[turn ^ 1])
+    
+    if (!pieces[turn ^ 1])
         return 1;
-    else if (empty)
-        return NOT_FINISHED;
+
+    if (adjudicate == false) {
+        if (empty)
+            return NOT_FINISHED;
+
+        const int a = pieces[turn].popCount();
+        const int b = pieces[turn ^ 1].popCount();
+        
+        return (a > b) ? 1 : 0;
+    }
 
     const int a = pieces[turn].popCount();
     const int b = pieces[turn ^ 1].popCount();
+    const int c = empty.popCount();
+    
+    if (a - c > b)
+        return 1;
+    
+    if (b - c > a)
+        return 0;
 
-    assert(a != b);
-
-    const int score = (a > b) ? 1 : 0;
-
-    return score;
+    return NOT_FINISHED;
 }
 
 uint64_t Board::perft(int depth) const {

@@ -44,7 +44,7 @@ public:
 
     int eval() const;
     int score() const;
-    float state() const;
+    float state(const bool adjudicate) const;
 
     uint64_t perft(int depth) const;
     uint64_t ttPerft(int depth) const;

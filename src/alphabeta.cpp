@@ -104,9 +104,22 @@ int alphabeta(const Board &board, std::vector<Move> &pv,
     }
     */
 
-    int bestScore = std::numeric_limits<int>::min();
+    const int staticEval = board.eval();
+    const int delta = 10;
+    const bool pvNode = beta - alpha > 1;
 
     std::vector<Move> childPV;
+
+   	// Razoring
+	if (depth == 1 && staticEval + delta < alpha)
+        return staticEval;
+
+    // Reverse Futility Pruning
+	if (depth <= 4 && staticEval - depth > beta)
+        return staticEval;
+
+    int bestScore = std::numeric_limits<int>::min();
+
     std::vector<Move> moves = board.genMoves();
 
     assert(moves.size() > 0);
@@ -120,9 +133,12 @@ int alphabeta(const Board &board, std::vector<Move> &pv,
     } else
         sort(moves, board);
 
-    const int prevAlpha = alpha;
-
     for (const Move move : moves) {
+        // Late move pruning 
+		// Skip quiet moves on low depths
+		if (depth <= 6 && move.score <= 1 && bestScore > std::numeric_limits<int>::min())
+            continue;
+
         Board copy = board;
         copy.make(move);
         copy.genKey(FANCY_TT);

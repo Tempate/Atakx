@@ -14,7 +14,7 @@ int alphabeta(const Board &board, std::vector<Move> &pv,
               const high_resolution_clock::time_point &end, const int depth,
               int alpha, int beta);
 
-void sort(std::vector<Move> &moves);
+void sort(std::vector<Move> &moves, const Board &board);
 void insertionSort(std::vector<Move> &moves);
 
 void infoString(const int depth, const int score, const uint64_t nodes,
@@ -80,6 +80,7 @@ int alphabeta(const Board &board, std::vector<Move> &pv,
     Entry entry = tt.get(board.key);
 
     // Transposition Table
+    /*
     if (entry.key == board.key && entry.depth == depth) {
         #ifdef DEBUG
             ++stats.ttHits;
@@ -96,9 +97,12 @@ int alphabeta(const Board &board, std::vector<Move> &pv,
             return entry.score;
         }
 
-        if (alpha >= beta)
+        if (alpha >= beta) {
+            pv.assign(1, entry.bestMove);
             return entry.score;
+        }
     }
+    */
 
     int bestScore = std::numeric_limits<int>::min();
 
@@ -113,12 +117,12 @@ int alphabeta(const Board &board, std::vector<Move> &pv,
 
         if (board.pieces[board.turn].popCount() == 0)
             return -MATE_SCORE;
-    } // else
-      //  sort(moves);
+    } else
+        sort(moves, board);
 
     const int prevAlpha = alpha;
 
-    for (Move move : moves) {
+    for (const Move move : moves) {
         Board copy = board;
         copy.make(move);
         copy.genKey(FANCY_TT);
@@ -143,6 +147,7 @@ int alphabeta(const Board &board, std::vector<Move> &pv,
 
     assert(bestScore > std::numeric_limits<int>::min());
 
+    /*
     int flag = EXACT;
 
     if (bestScore <= prevAlpha)
@@ -153,38 +158,35 @@ int alphabeta(const Board &board, std::vector<Move> &pv,
     // Always replace the entry for the TT
     assert(pv.size() > 0);
     tt.add(board.key, pv[0], bestScore, depth, flag);
+    */
 
     return bestScore;
 }
 
-void sort(std::vector<Move> &moves) {
+void sort(std::vector<Move> &moves, const Board &board) {
     for (Move &move : moves) {
-        switch (move.type) {
-        case SINGLE:
-            move.score = 100;
-            break;
-        case DOUBLE:
-            move.score = 0;
-            break;
-        }
+        move.score = board.countCaptures(move);
+
+        if (move.type == SINGLE)
+            move.score += 2;
     }
 
-    if (moves.size() > 1)
-        insertionSort(moves);
+    insertionSort(moves);
 }
 
 void insertionSort(std::vector<Move> &moves) {
     assert(moves.size() > 0);
 
     for (int i = 1; i < moves.size(); ++i) {
+        const Move move = moves[i];
         int j = i - 1;
 
-        while (j >= 0 && moves[j].score < moves[i].score) {
+        while (j >= 0 && moves[j].score < move.score) {
             moves[j + 1] = moves[j];
             --j;
         }
 
-        moves[j + 1] = moves[i];
+        moves[j + 1] = move;
     }
 }
 

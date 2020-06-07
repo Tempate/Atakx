@@ -3,7 +3,6 @@
 
 #include "board.h"
 #include "lookup.h"
-#include "tests.h"
 #include "uai.h"
 
 #include "main.h"

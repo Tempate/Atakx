@@ -145,7 +145,7 @@ int alphabeta(const Board &board, std::vector<Move> &pv,
         copy.make(move);
         copy.genKey();
 
-        const int score = -alphabeta(copy, childPV, end, depth - 1, -beta, -alpha, 0);
+        const int score = -alphabeta(copy, childPV, end, depth - 1, -beta, -alpha);
 
         if (score > bestScore) {
             bestScore = score;

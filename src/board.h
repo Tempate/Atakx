@@ -41,18 +41,14 @@ public:
 
     void playSequence(const std::string &moves);
     int countCaptures(const Move &move) const;
-
-    int eval() const;
+    
     int score() const;
     float state(const bool adjudicate) const;
 
     uint64_t perft(int depth) const;
     uint64_t ttPerft(int depth) const;
 
-    void genKey(const bool symmetry);
-
-    std::array<Board, N_SYM> genSymmetries();
-    std::array<std::array<Bitboard, N_SYM>, 2> genBBSymmetries();
+    void genKey();
 
     std::chrono::high_resolution_clock::time_point
     timeManagement(std::chrono::high_resolution_clock::time_point start) const;

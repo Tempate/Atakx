@@ -69,16 +69,16 @@ void TT::add(const uint64_t key, Move &bestMove, const int depth,
     assert(key != 0);
     assert(n > 0);
 
-    entries[key % n] = Entry{key, Move{}, depth, score, flag};
+    entries[key % n] = Entry{key, bestMove, depth, score, flag};
 }
 
-uint64_t TT::perft(Board &board, const int depth, const bool symmetry) {
+uint64_t TT::perft(Board &board, const int depth) {
     assert(depth > 0);
 
     if (depth == 1)
         return board.countMoves();
 
-    board.genKey(symmetry);
+    board.genKey();
     Entry entry = get(board.key);
 
     if (board.key == entry.key && entry.depth == depth)
@@ -91,9 +91,9 @@ uint64_t TT::perft(Board &board, const int depth, const bool symmetry) {
     for (const Move &move : moves) {
         Board copy = board;
         copy.make(move);
-        copy.genKey(symmetry);
+        copy.genKey();
 
-        nodes += perft(copy, depth - 1, symmetry);
+        nodes += perft(copy, depth - 1);
     }
 
     entries[board.key % n] = Entry{board.key, depth, nodes};
@@ -101,20 +101,13 @@ uint64_t TT::perft(Board &board, const int depth, const bool symmetry) {
     return nodes;
 }
 
-void Board::genKey(const bool symmetry) {
+void Board::genKey() {
     key = 0;
 
     std::array<Bitboard, 2> bbs;
 
-    if (symmetry) {
-        std::array<std::array<Bitboard, N_SYM>, 2> symmetries =
-            genBBSymmetries();
-
-        bbs = pickSymmetry(symmetries);
-    } else {
-        bbs[BLUE] = pieces[BLUE];
-        bbs[RED] = pieces[RED];
-    }
+    bbs[BLUE] = pieces[BLUE];
+    bbs[RED] = pieces[RED];
 
     for (int color = BLUE; color <= RED; ++color) {
         Bitboard bb = bbs[color];
@@ -128,23 +121,4 @@ void Board::genKey(const bool symmetry) {
     }
 
     key ^= randomKeys[TURN_OFFSET + turn];
-}
-
-std::array<Bitboard, 2>
-pickSymmetry(const std::array<std::array<Bitboard, N_SYM>, 2> &symmetries) {
-    std::array<Bitboard, 2> min = {symmetries[BLUE][0], symmetries[RED][0]};
-
-    int index = 0;
-
-    for (int i = 1; i < N_SYM; ++i) {
-        if ((symmetries[BLUE][i] < min[BLUE]) ||
-            (symmetries[BLUE][i] == min[BLUE] &&
-             symmetries[RED][i] < min[RED])) {
-            min[BLUE] = symmetries[BLUE][i];
-            min[RED] = symmetries[RED][i];
-            index = i;
-        }
-    }
-
-    return min;
 }

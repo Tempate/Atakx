@@ -11,7 +11,9 @@ Board::Board() {
     startpos();
 }
 
-Board::Board(const std::string &fen) { fromFen(fen); }
+Board::Board(const std::string &fen) { 
+    fromFen(fen); 
+}
 
 void Board::blank() {
     pieces[BLUE] = Bitboard{};
@@ -42,10 +44,12 @@ void Board::random() {
 
     turn = rand() % 2;
 
-    genKey(FANCY_TT);
+    genKey();
 }
 
-void Board::startpos() { fromFen("x5o/7/7/7/7/7/o5x x 0"); }
+void Board::startpos() { 
+    fromFen("x5o/7/7/7/7/7/o5x x 0"); 
+}
 
 void Board::fromFen(const std::string &fen) {
     int rank = RANKS - 1, file = 0;
@@ -132,7 +136,7 @@ void Board::fromFen(const std::string &fen) {
 
     empty = ~(pieces[BLUE] | pieces[RED] | gaps);
 
-    genKey(FANCY_TT);
+    genKey();
 }
 
 std::string Board::toFen() const {
@@ -291,12 +295,11 @@ void Board::playSequence(const std::string &movesString) {
 int Board::countCaptures(const Move &move) const {
     assert(move.to >= 0 && move.to < 49);
 
+    if (move.type == NULL_MOVE)
+        return 0;
+
     const Bitboard captures = singlesLookup[move.to] & pieces[turn ^ 1];
     return captures.popCount();
-}
-
-int Board::eval() const {
-    return pieces[turn].popCount() - pieces[turn ^ 1].popCount();
 }
 
 int Board::score() const {
@@ -369,40 +372,6 @@ uint64_t Board::perft(int depth) const {
     }
 
     return nodes;
-}
-
-// Generates an array of symmetrical boards.
-std::array<Board, N_SYM> Board::genSymmetries() {
-    std::array<Board, N_SYM> symmetries;
-
-    std::array<std::array<Bitboard, N_SYM>, 2> bbSymmetries = genBBSymmetries();
-
-    for (int i = 0; i < N_SYM; ++i) {
-        symmetries[i].pieces[BLUE] = bbSymmetries[BLUE][i];
-        symmetries[i].pieces[RED] = bbSymmetries[RED][i];
-
-        symmetries[i].empty = ~(bbSymmetries[BLUE][i] | bbSymmetries[RED][i]);
-        symmetries[i].gaps = gaps;
-
-        symmetries[i].turn = turn;
-        symmetries[i].ply = ply;
-    }
-
-    return symmetries;
-}
-
-// Generates the symmetries for both piece bitboards.
-std::array<std::array<Bitboard, N_SYM>, 2> Board::genBBSymmetries() {
-    std::array<std::array<Bitboard, N_SYM>, 2> symmetries;
-
-    for (int color = BLUE; color <= RED; ++color) {
-        symmetries[color][0] = pieces[color];
-        symmetries[color][1] = symmetries[color][0].rotate180();
-        symmetries[color][2] = pieces[color].flipDiagonally();
-        symmetries[color][3] = symmetries[color][2].rotate180();
-    }
-
-    return symmetries;
 }
 
 std::chrono::high_resolution_clock::time_point Board::timeManagement(

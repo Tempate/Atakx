@@ -12,7 +12,9 @@ private:
 public:
     constexpr BitScanner(const uint64_t &value) : data{value} {}
 
-    constexpr int operator*() const noexcept { return __builtin_ctzll(data); }
+    constexpr int operator*() const noexcept { 
+        return __builtin_ctzll(data); 
+    }
 
     constexpr BitScanner operator++() noexcept {
         data &= data - 1;
@@ -39,21 +41,15 @@ public:
 
     void random();
 
-    Bitboard flipVertically() const;
-    Bitboard flipHorizontally() const;
-    Bitboard flipDiagonally() const;
-    Bitboard rotate90() const;
-    Bitboard rotate180() const;
-
-    std::array<Bitboard, 8> getSymmetries() const;
-
     void print() const;
 
     static constexpr Bitboard full() {
         return Bitboard{(uint64_t)0x1ffffffffffff};
     }
 
-    constexpr int getSquare(int file, int rank) { return rank * RANKS + file; }
+    constexpr int getSquare(int file, int rank) { 
+        return rank * RANKS + file; 
+    }
 
     constexpr Bitboard operator&(const Bitboard &bb) const {
         return Bitboard{value & bb.value};
@@ -108,9 +104,13 @@ public:
         return value > bb.value;
     }
 
-    constexpr bool operator>(const uint64_t n) const { return value > n; }
+    constexpr bool operator>(const uint64_t n) const { 
+        return value > n; 
+    }
 
-    constexpr operator bool() const { return value; }
+    constexpr operator bool() const { 
+        return value; 
+    }
 
     constexpr inline int popCount() const {
         return __builtin_popcountll(value);
@@ -124,13 +124,21 @@ public:
         return 48 - __builtin_clzll(value);
     }
 
-    constexpr BitScanner begin() const noexcept { return BitScanner{value}; }
+    constexpr BitScanner begin() const noexcept { 
+        return BitScanner{value}; 
+    }
 
-    constexpr BitScanner end() const noexcept { return BitScanner{0}; }
+    constexpr BitScanner end() const noexcept { 
+        return BitScanner{0}; 
+    }
 
-    constexpr inline uint64_t lsbBB() const { return value & -value; }
+    constexpr inline uint64_t lsbBB() const { 
+        return value & -value; 
+    }
 
-    constexpr inline uint64_t unsetLSB() { return value &= value - 1; }
+    constexpr inline uint64_t unsetLSB() { 
+        return value &= value - 1; 
+    }
 };
 
 #endif // #ifndef BITBOARD_H_

@@ -55,7 +55,7 @@ public:
 
     void clear();
 
-    uint64_t perft(Board &board, const int depth, const bool symmetry);
+    uint64_t perft(Board &board, const int depth);
 
     Entry get(const uint64_t key);
     void add(const uint64_t key, Move &bestMove, const int depth,
@@ -63,8 +63,5 @@ public:
 };
 
 extern TT tt;
-
-std::array<Bitboard, 2>
-pickSymmetry(const std::array<std::array<Bitboard, N_SYM>, 2> &symmetries);
 
 #endif // #ifndef HASHTABLES_H_

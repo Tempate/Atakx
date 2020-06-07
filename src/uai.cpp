@@ -49,8 +49,6 @@ void uai() {
             tt.clear();
         } else if (cmd.compare("position") == 0)
             position(board, msg.substr(9));
-        else if (cmd.compare("eval") == 0)
-            board.eval();
         else if (cmd.compare("go") == 0)
             go(board, msg.substr(3));
         else if (cmd.compare("print") == 0)

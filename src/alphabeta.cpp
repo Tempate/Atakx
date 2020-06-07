@@ -2,9 +2,11 @@
 #include <limits>
 
 #include "board.h"
+#include "lookup.h"
 #include "hashtables.h"
 #include "moves.h"
 #include "uai.h"
+#include "eval.h"
 
 using namespace std::chrono;
 
@@ -74,8 +76,8 @@ int alphabeta(const Board &board, std::vector<Move> &pv,
 
     settings.nodes++;
 
-    if (depth == 0)
-        return board.eval();
+    if (depth <= 0)
+        return eval(board);
 
     Entry entry = tt.get(board.key);
 
@@ -104,8 +106,8 @@ int alphabeta(const Board &board, std::vector<Move> &pv,
     }
     */
 
-    const int staticEval = board.eval();
-    const int delta = 10;
+    const int staticEval = eval(board);
+    const int delta = 10 * tileValue;
     const bool pvNode = beta - alpha > 1;
 
     std::vector<Move> childPV;
@@ -115,7 +117,7 @@ int alphabeta(const Board &board, std::vector<Move> &pv,
         return staticEval;
 
     // Reverse Futility Pruning
-	if (depth <= 4 && staticEval - depth > beta)
+	if (depth <= 4 && staticEval - depth * tileValue > beta)
         return staticEval;
 
     int bestScore = std::numeric_limits<int>::min();
@@ -134,17 +136,16 @@ int alphabeta(const Board &board, std::vector<Move> &pv,
         sort(moves, board);
 
     for (const Move move : moves) {
-        // Late move pruning 
+        // Late move pruning
 		// Skip quiet moves on low depths
 		if (depth <= 6 && move.score <= 1 && bestScore > std::numeric_limits<int>::min())
             continue;
 
         Board copy = board;
         copy.make(move);
-        copy.genKey(FANCY_TT);
+        copy.genKey();
 
-        const int score =
-            -alphabeta(copy, childPV, end, depth - 1, -beta, -alpha);
+        const int score = -alphabeta(copy, childPV, end, depth - 1, -beta, -alpha, 0);
 
         if (score > bestScore) {
             bestScore = score;
@@ -176,7 +177,7 @@ int alphabeta(const Board &board, std::vector<Move> &pv,
     tt.add(board.key, pv[0], bestScore, depth, flag);
     */
 
-    return bestScore;
+    return depth + bestScore;
 }
 
 void sort(std::vector<Move> &moves, const Board &board) {

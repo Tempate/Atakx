@@ -31,4 +31,7 @@ add_executable(
     src/alphabeta.cpp
     src/mcts.cpp
     src/eval.cpp
+    src/tuner/tuner.cpp
+    src/tuner/population.cpp
+    src/tuner/player.cpp
 )

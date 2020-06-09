@@ -7,15 +7,19 @@
 #include <tuple>
 
 class Population {
-    const int population_size = 10;
+    int population_size = 10;
     std::vector<Player> population;
 
     public:
     Population();
 
+    Population(std::vector<Player> population): population(population) {
+        population_size = population.size();
+    }
+
     std::pair<Player, float> calcFitness() const;
     void compete();
-    void nextGeneration();
+    void nextGeneration(const float best_fitness);
 };
 
 #endif 

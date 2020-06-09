@@ -2,6 +2,7 @@
 #include "lookup.h"
 #include "board.h"
 #include "eval.h"
+#include "tuner/tuner.h"
 
 #include <tuple>
 
@@ -13,7 +14,12 @@ const int tileValue = 100;
 int eval(const Board &board) {
     const int material = board.pieces[board.turn].popCount() - board.pieces[board.turn ^ 1].popCount();
     const int holes = countHoles(board, board.turn) - countHoles(board, board.turn ^ 1);
-    const int psqt = psqtScore(board, board.turn) - psqtScore(board, board.turn ^ 1);
+    
+    #if TUNING
+        const int psqt = tuner.tunePsqtScore(board, board.turn) - tuner.tunePsqtScore(board, board.turn ^ 1);
+    #else
+        const int psqt = psqtScore(board, board.turn) - psqtScore(board, board.turn ^ 1);
+    #endif
 
     return material * tileValue + holes + psqt;
 }
@@ -35,39 +41,14 @@ int countHoles(const Board &board, const int side) {
 }
 
 int psqtScore(const Board &board, const int side) {
-    int score;
-
-    static const std::array<std::pair<Bitboard, int>, 4> pairs = {
-        std::make_pair(Bitboard{(uint64_t) 0b1000001000000000000000000000000000000000001000001}, 100),
-        std::make_pair(Bitboard{(uint64_t) 0b0111110100000110000011000001100000110000010111110}, 50),
-        //std::make_pair(Bitboard{(uint64_t) 0b0000000011111001000100100010010001001111100000000}, -10),
-        std::make_pair(Bitboard{(uint64_t) 0b0000000000000000000000001000000000000000000000000}, -10),
-        std::make_pair(Bitboard{(uint64_t) 0b0000000000000000111000010100001110000000000000000}, 10)
-        //std::make_pair(Bitboard{(uint64_t) 0b0000000010001000101000001000001010001000100000000}, 0)
-    };
-
-    
-
-    for (const auto &pair : pairs) {
-        Bitboard bb;
-        int value;
-        std::tie(bb, value) = pair;
-        score += value * (board.pieces[side] & bb).popCount();
-    }
-
-    return score;
-}
-
-/*
-int psqtScore(const Board &board, const int side) {
     static const std::array<int, FILES * RANKS> psqt = {
-        20, 10, 10, 10, 10, 10, 20,
-        10, 2, 2, 2, 2, 2, 10,
-        10, 2, 0, 0, 0, 2, 10,
-        10, 2, 0, 0, 0, 2, 10,
-        10, 2, 0, 0, 0, 2, 10,
-        10, 2, 2, 2, 2, 2, 10,
-        20, 10, 10, 10, 10, 10, 20
+        120, 50, 59, 50, 50, 72, 120,
+        44, 0, 0, -9, 10, 7, 44,
+        48, 5, 14, 0, -2, -9, 60,
+        55, 0, 7, -31, 0, -8, 53,
+        49, -4, 0, 4, 0, 0, 62,
+        99, 3, 0, -8, 3, -4, 46,
+        119, 30, 42, 50, 60, 60, 120
     };
 
     Bitboard bb{(uint64_t) 1};
@@ -82,4 +63,3 @@ int psqtScore(const Board &board, const int side) {
 
     return score;
 }
-*/

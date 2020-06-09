@@ -29,12 +29,42 @@ std::vector<std::string> Tuner::parseOpenings() {
 
 void Tuner::run() {
     Population population;
+    std::vector<Player> best_players;
+    best_players.reserve(generations + 1);
+    best_players.emplace_back();
 
     for (int i = 0; i < generations; i++) {
         std::cout << "Generation " << i + 1 << std::endl;
-        population.compete();
-        population.nextGeneration();
+        best_players.push_back(testPopulation(population));
     }
+
+    Population best_population{best_players};
+
+    std::cout << "Generation of winners" << std::endl;
+    testPopulation(best_population);
+}
+
+Player Tuner::testPopulation(Population &population) const {
+    population.compete();
+
+    Player best_player;
+    float best_fitness;
+    std::tie(best_player, best_fitness) = population.calcFitness();
+
+    std::cout << "------------------------" << std::endl;
+
+    for (int rank = 0; rank < RANKS; rank++) {
+        for (int file = 0; file < FILES; file++)
+            std::cout << best_player.dna[rank * FILES + file] << " ";
+
+        std::cout << std::endl;
+    }
+
+    std::cout << "------------------------" << std::endl;
+
+    population.nextGeneration(best_fitness);
+
+    return best_player;
 }
 
 int Tuner::tunePsqtScore(const Board &board, const int side) const {
@@ -48,26 +78,22 @@ void Tuner::match(Player &player1, Player &player2) {
     playing[0] = &player1;
     playing[1] = &player2;
 
-    std::cout << "Match started" << std::endl;
-
     for (int i = 0; i < number_games; i++) {
-        player1.games++;
-        player2.games++;
-
         if (i % 2 == 0)
             opening = openings[i % openings.size()];
 
         const int winner = play(opening);
 
-        if (winner != -1)
+        if (winner != -1) {
             playing[winner]->score++;
+            player1.games++;
+            player2.games++;
+        }
 
         const auto player1 = playing[0];
         playing[0] = playing[1];
         playing[1] = player1;
     }
-
-    std::cout << "Match ended" << std::endl;
 }
 
 int Tuner::play(const std::string &opening) {
@@ -80,7 +106,7 @@ int Tuner::play(const std::string &opening) {
         const Move move = abSearch(board);
         board.make(move);
 
-        if (board.ply > 300)
+        if (board.ply > 1000)
             return -1;
     }
 

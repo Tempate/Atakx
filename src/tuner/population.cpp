@@ -9,16 +9,23 @@ Population::Population() {
         population.push_back(player.reproduce());
 }
 
+/*
+constexpr std::vector<std::pair<int, int>> Population::genPairings() {
+    std::vector<std::pair<int, int>> pairings;
+
+    return pairings;
+}
+*/
+
 void Population::compete() {
+    //std::vector<std::pair<int, int>> combinations;
+
     for (int i = 0; i < population.size(); i++) {
-        Player &player = population[i];
+        for (int j = 0; j < population.size(); j++) {
+            if (i == j)
+                continue;
 
-        std::vector<Player> enemies = population;
-        enemies.erase(enemies.begin() + i);
-
-        for (int j = 0; j < 4; j++) {
-            Player &enemy = enemies[rand() % enemies.size()];
-            tuner.match(player, enemy);
+            tuner.match(population[i], population[j]);
         }
     }
 }
@@ -41,22 +48,13 @@ std::pair<Player, float> Population::calcFitness() const {
     return std::make_pair(best_player, best_fitness);
 }
 
-void Population::nextGeneration() {
-    Player best_player;
-    float best_fitness;
-    std::tie(best_player, best_fitness) = calcFitness();
-
-    std::cout << "------------------------" << std::endl;
-
-    for (const int value : best_player.dna)
-        std::cout << value << std::endl;
-
-    std::cout << "------------------------" << std::endl;
-
+void Population::nextGeneration(const float best_fitness) {
     std::vector<Player> pool;
+    pool.reserve(10 * population_size);
 
     for (const Player &player : population) {
-        const float relative_fitness = player.fitness() / best_fitness;
+        float relative_fitness = player.fitness() / best_fitness;
+        relative_fitness *= relative_fitness;
 
         for (int i = 0; i < relative_fitness * 10; i++)
             pool.push_back(player);

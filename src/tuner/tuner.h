@@ -2,16 +2,16 @@
 #define TUNER_H_
 
 #include "../board.h"
+#include "population.h"
 #include "player.h"
 
 class Tuner {
     const std::string output_filename;
     const std::string openings_filename;
 
-    const int number_games = 10;
-    const int learning_rate = 20;
-    const int movetime = 20;
-    const int generations = 100;
+    const int number_games = 50;
+    const int movetime = 1;
+    const int generations = 20;
 
     std::array<Player*, 2> playing;
 
@@ -27,6 +27,8 @@ class Tuner {
     private:
     std::vector<std::string> parseOpenings();
     int play(const std::string &opening);
+
+    Player testPopulation(Population &population) const;
 };
 
 extern Tuner tuner;

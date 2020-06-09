@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 
 # Project
-project(Sudoku VERSION 1.0 LANGUAGES CXX)
+project(Funes VERSION 1.0 LANGUAGES CXX)
 
 # Base directory relative includes
 include_directories(.)

@@ -54,7 +54,9 @@ Move abSearch(const Board &board) {
 
         bestMove = pv.front();
 
+        #if TUNING == false
         infoString(depth, score, settings.nodes, elapsed, pv);
+        #endif
     }
 
     // std::cout << "TT Hits: " << stats.ttHits << std::endl;

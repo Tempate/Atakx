@@ -10,6 +10,7 @@
 #include <vector>
 
 #define DEBUG false
+#define TUNING true
 
 enum { RANDOM_PLAYER, MOST_CAPTURES, ALPHABETA, MCTS };
 

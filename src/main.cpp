@@ -4,6 +4,7 @@
 #include "board.h"
 #include "lookup.h"
 #include "uai.h"
+#include "tuner/tuner.h"
 
 #include "main.h"
 
@@ -15,7 +16,11 @@ int main() {
 
     genLookupTables();
 
-    uai();
+    #if TUNING
+        tuner.run();
+    #else
+        uai();
+    #endif
 
     return 0;
 }

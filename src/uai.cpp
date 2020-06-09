@@ -15,7 +15,7 @@ void isready(void);
 void position(Board &board, const std::string &s);
 void go(Board &board, const std::string &s);
 void perft(const Board &board, const int depth);
-void bestmove(const Board &board);
+Move bestmove(const Board &board);
 
 pthread_t worker;
 int working = 0;
@@ -44,10 +44,13 @@ void uai() {
 
         if (cmd.compare("isready") == 0)
             isready();
+
         else if (cmd.compare("ucinewgame") == 0) {
             board.startpos();
             tt.clear();
-        } else if (cmd.compare("position") == 0)
+        } 
+        
+        else if (cmd.compare("position") == 0)
             position(board, msg.substr(9));
         else if (cmd.compare("go") == 0)
             go(board, msg.substr(3));
@@ -108,7 +111,9 @@ void go(Board &board, const std::string &s) {
     else if (cmd.compare("movetime") == 0)
         settings.movetime = std::stoi(s.substr(9));
 
-    bestmove(board);
+    const Move move = bestmove(board);
+
+    std::cout << "bestmove " << move.toString() << std::endl;
 }
 
 void perft(const Board &board, const int depth) {
@@ -133,7 +138,7 @@ void perft(const Board &board, const int depth) {
     }
 }
 
-void bestmove(const Board &board) {
+Move bestmove(const Board &board) {
     Move bestMove;
 
     if (TYPE == RANDOM_PLAYER) {
@@ -163,5 +168,5 @@ void bestmove(const Board &board) {
     else if (TYPE == MCTS)
         bestMove = uctSearch(board);
 
-    std::cout << "bestmove " << bestMove.toString() << std::endl;
+    return bestMove;
 }

@@ -1,43 +1,46 @@
-#include "board.h"
+#include "board.hpp"
 
-void genSingleMovesLookup(void);
-void genDoubleMovesLookup(void);
+constexpr std::array<Bitboard, FILES * RANKS> gen_single_moves_lookup();
+constexpr std::array<Bitboard, FILES * RANKS> gen_double_moves_lookup();
 
-Bitboard singlesLookup[49];
-Bitboard doublesLookup[49];
+constexpr Bitboard notGFile{(uint64_t) 0x0fdfbf7efdfbf};
+constexpr Bitboard notAFile{(uint64_t) 0x1fbf7efdfbf7e};
 
-const Bitboard notGFile((uint64_t)0xfdfbf7efdfbf);
-const Bitboard notAFile((uint64_t)0x1fbf7efdfbf7e);
+std::array<Bitboard, FILES * RANKS> singlesLookup = gen_single_moves_lookup();
+std::array<Bitboard, FILES * RANKS> doublesLookup = gen_double_moves_lookup();
 
-void genLookupTables(void) {
-    genSingleMovesLookup();
-    genDoubleMovesLookup();
-}
 
-void genSingleMovesLookup(void) {
-    for (int i = 0; i < 49; ++i) {
-        Bitboard sqr(i);
-
-        Bitboard aux = sqr | (sqr << 7) | (sqr >> 7);
-        Bitboard east = (aux & notGFile) << 1;
-        Bitboard west = (aux & notAFile) >> 1;
-
-        singlesLookup[i] = (aux | east | west) ^ sqr;
-    }
-}
-
-void genDoubleMovesLookup(void) {
-    static const Bitboard notFGFiles = Bitboard{(uint64_t)0x7cf9f3e7cf9f};
-    static const Bitboard notABFiles = Bitboard{(uint64_t)0x1f3e7cf9f3e7c};
+constexpr std::array<Bitboard, FILES * RANKS> gen_single_moves_lookup() {
+    std::array<Bitboard, FILES * RANKS> lookup_table = {0}; 
 
     for (int i = 0; i < 49; ++i) {
-        Bitboard sqr(i);
+        const Bitboard sqr(i);
 
-        Bitboard file =
-            sqr | (sqr << 7) | (sqr << 14) | (sqr >> 14) | (sqr >> 7);
-        Bitboard east = ((file & notFGFiles) << 2) | ((file & notGFile) << 1);
-        Bitboard west = ((file & notABFiles) >> 2) | ((file & notAFile) >> 1);
+        const Bitboard aux = sqr | (sqr << 7) | (sqr >> 7);
+        const Bitboard east = (aux & notGFile) << 1;
+        const Bitboard west = (aux & notAFile) >> 1;
 
-        doublesLookup[i] = (file | east | west) & ~(singlesLookup[i] | sqr);
+        lookup_table[i] = (aux | east | west) ^ sqr;
     }
+
+    return lookup_table;
+}
+
+constexpr std::array<Bitboard, FILES * RANKS> gen_double_moves_lookup() {
+    constexpr Bitboard notFGFiles = Bitboard{(uint64_t) 0x07cf9f3e7cf9f};
+    constexpr Bitboard notABFiles = Bitboard{(uint64_t) 0x1f3e7cf9f3e7c};
+
+    std::array<Bitboard, FILES * RANKS> lookup_table = {0};
+
+    for (int i = 0; i < 49; ++i) {
+        const Bitboard sqr(i);
+
+        const Bitboard file = sqr | (sqr << 7) | (sqr << 14) | (sqr >> 14) | (sqr >> 7);
+        const Bitboard east = ((file & notFGFiles) << 2) | ((file & notGFile) << 1);
+        const Bitboard west = ((file & notABFiles) >> 2) | ((file & notAFile) >> 1);
+
+        lookup_table[i] = (file | east | west) & ~(singlesLookup[i] | sqr);
+    }
+
+    return lookup_table;
 }

@@ -1,8 +1,8 @@
-#include "main.h"
-#include "lookup.h"
-#include "board.h"
-#include "eval.h"
-#include "tuner/tuner.h"
+#include "main.hpp"
+#include "lookup.hpp"
+#include "board.hpp"
+#include "eval.hpp"
+#include "tuner/tuner.hpp"
 
 #include <tuple>
 
@@ -13,7 +13,6 @@ const int tileValue = 100;
 
 int eval(const Board &board) {
     const int material = board.pieces[board.turn].popCount() - board.pieces[board.turn ^ 1].popCount();
-    const int holes = countHoles(board, board.turn) - countHoles(board, board.turn ^ 1);
     
     #if TUNING
         const int psqt = tuner.tunePsqtScore(board, board.turn) - tuner.tunePsqtScore(board, board.turn ^ 1);
@@ -21,25 +20,24 @@ int eval(const Board &board) {
         const int psqt = psqtScore(board, board.turn) - psqtScore(board, board.turn ^ 1);
     #endif
 
-    return material * tileValue + holes + psqt;
+    return tileValue * (material + 10 * board.turn) + psqt;
 }
 
-int countHoles(const Board &board, const int side) {
-    int holes = 0;
+int psqtScore(const Board &board, const int side) {
+    int score;
 
-    for (int sqr : board.empty) {
-        const Bitboard singles = singlesLookup[sqr];
-        const Bitboard doubles = doublesLookup[sqr];
-        const Bitboard neighborhood = singles | doubles;
+    static const std::array<std::pair<Bitboard, int>, 2> phases = {
+        std::make_pair(Bitboard{(uint64_t) 0b1000001000000000000000000000000000000000001000001}, 90),
+        std::make_pair(Bitboard{(uint64_t) 0b0111110100000110000011000001100000110000010111110}, 70)
+    };
 
-        if (singles & board.pieces[side] && 
-            !(neighborhood & board.pieces[side ^ 1]))
-            holes++;
-    }
+    for (const auto &[bb, value] : phases)
+        score += (board.pieces[side] & bb).popCount() * value;
 
-    return holes;
+    return score;
 }
 
+/*
 int psqtScore(const Board &board, const int side) {
     static const std::array<int, FILES * RANKS> psqt = {
         120, 50, 59, 50, 50, 72, 120,
@@ -63,3 +61,4 @@ int psqtScore(const Board &board, const int side) {
 
     return score;
 }
+*/

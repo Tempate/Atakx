@@ -1,15 +1,17 @@
-#ifndef BOARD_H_
-#define BOARD_H_
+#ifndef BOARD_HPP_
+#define BOARD_HPP_
 
 #include <chrono>
 #include <cinttypes>
 #include <string>
 
-#include "main.h"
-#include "bitboard.h"
-#include "moves.h"
+#include "main.hpp"
+#include "bitboard.hpp"
+#include "moves.hpp"
 
 #define NOT_FINISHED 100
+
+enum {MAKE, UNDO};
 
 class Board {
 public:
@@ -21,6 +23,8 @@ public:
     int ply;
 
     uint64_t key;
+
+    int fiftyMoves = 0;
 
     Board();
     Board(const std::string &fen);
@@ -42,19 +46,15 @@ public:
     void playSequence(const std::string &moves);
     int countCaptures(const Move &move) const;
     
-    int score() const;
     float state(const bool adjudicate) const;
 
     uint64_t perft(int depth) const;
     uint64_t ttPerft(int depth) const;
 
     void genKey();
-
-    std::chrono::high_resolution_clock::time_point
-    timeManagement(std::chrono::high_resolution_clock::time_point start) const;
 };
 
 constexpr static inline int getRank(const int sqr) { return sqr / RANKS; }
 constexpr static inline int getFile(const int sqr) { return sqr % FILES; }
 
-#endif /* BOARD_H_ */
+#endif /* BOARD_HPP_ */

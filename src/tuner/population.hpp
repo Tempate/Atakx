@@ -1,14 +1,16 @@
-#ifndef POPULATION_H_
-#define POPULATION_H_
+#ifndef POPULATION_HPP_
+#define POPULATION_HPP_
 
-#include "../main.h"
-#include "player.h"
+#include "../main.hpp"
+#include "player.hpp"
 
 #include <tuple>
 
 class Population {
     int population_size = 10;
     std::vector<Player> population;
+
+    std::vector<std::pair<int, int>> pairings;
 
     public:
     Population();
@@ -20,6 +22,10 @@ class Population {
     std::pair<Player, float> calcFitness() const;
     void compete();
     void nextGeneration(const float best_fitness);
+
+    private:
+    std::vector<std::pair<int, int>> genPairings();
+    void playMatches();
 };
 
 #endif 

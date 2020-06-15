@@ -1,10 +1,10 @@
-#ifndef HASHTABLES_H_
-#define HASHTABLES_H_
+#ifndef HASHTABLES_HPP_
+#define HASHTABLES_HPP_
 
 #include <string>
 
-#include "board.h"
-#include "moves.h"
+#include "board.hpp"
+#include "moves.hpp"
 
 #define DEF_SIZE 128
 #define DEF_N DEF_SIZE * 1024 * 1024 / sizeof(Entry)
@@ -64,4 +64,4 @@ public:
 
 extern TT tt;
 
-#endif // #ifndef HASHTABLES_H_
+#endif // #ifndef HASHTABLES_HPP_

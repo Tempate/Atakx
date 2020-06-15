@@ -1,9 +1,9 @@
-#ifndef BITBOARD_H_
-#define BITBOARD_H_
+#ifndef BITBOARD_HPP_
+#define BITBOARD_HPP_
 
 #include <cinttypes>
 
-#include "main.h"
+#include "main.hpp"
 
 class BitScanner {
 private:
@@ -141,4 +141,4 @@ public:
     }
 };
 
-#endif // #ifndef BITBOARD_H_
+#endif // #ifndef BITBOARD_HPP_

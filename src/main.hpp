@@ -1,5 +1,5 @@
-#ifndef MAIN_H_
-#define MAIN_H_
+#ifndef MAIN_HPP_
+#define MAIN_HPP_
 
 #define ENGINE_NAME "Funes"
 #define ENGINE_AUTHOR "tempate"
@@ -10,16 +10,17 @@
 #include <vector>
 
 #define DEBUG false
-#define TUNING true
+#define TUNING false
+#define THREADS 5
 
-enum { RANDOM_PLAYER, MOST_CAPTURES, ALPHABETA, MCTS };
+enum { RANDOM_PLAYER, MOST_CAPTURES, ALPHABETA };
 
 #define TYPE ALPHABETA
 
 #define FILES 7
 #define RANKS 7
 
-#define MATE_SCORE 10000
+#define MATE_SCORE 100000
 
 enum { BLUE, RED };
 
@@ -29,4 +30,4 @@ struct Stats {
     Stats() : ttHits(0) {}
 };
 
-#endif // #ifndef MAIN_H_
+#endif // #ifndef MAIN_HPP_

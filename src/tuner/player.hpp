@@ -1,8 +1,8 @@
-#ifndef PLAYER_H_
-#define PLAYER_H_
+#ifndef PLAYER_HPP_
+#define PLAYER_HPP_
 
-#include "../main.h"
-#include "../board.h"
+#include "../main.hpp"
+#include "../board.hpp"
 
 class Player {
     float mutation_rate = 0.15;

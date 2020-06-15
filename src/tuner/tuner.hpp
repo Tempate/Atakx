@@ -1,9 +1,9 @@
-#ifndef TUNER_H_
-#define TUNER_H_
+#ifndef TUNER_HPP_
+#define TUNER_HPP_
 
-#include "../board.h"
-#include "population.h"
-#include "player.h"
+#include "../board.hpp"
+#include "population.hpp"
+#include "player.hpp"
 
 class Tuner {
     const std::string output_filename;
@@ -11,7 +11,7 @@ class Tuner {
 
     const int number_games = 50;
     const int movetime = 1;
-    const int generations = 20;
+    const int generations = 50;
 
     std::array<Player*, 2> playing;
 
@@ -33,4 +33,4 @@ class Tuner {
 
 extern Tuner tuner;
 
-#endif // #ifndef TUNER_H_
+#endif // #ifndef TUNER_HPP_

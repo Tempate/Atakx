@@ -1,9 +1,9 @@
-#ifndef UAI_H_
-#define UAI_H_
+#ifndef UAI_HPP_
+#define UAI_HPP_
 
 #include <cinttypes>
 
-#include "moves.h"
+#include "moves.hpp"
 
 #define DEF_DEPTH 5
 #define MAX_DEPTH 50
@@ -39,8 +39,6 @@ struct Settings {
     }
 };
 
-extern Settings settings;
-
 void uai();
 
-#endif // #ifndef UAI_H_
+#endif // #ifndef UAI_HPP_

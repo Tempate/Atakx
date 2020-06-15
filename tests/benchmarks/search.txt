@@ -1,0 +1,19 @@
+Search tests
+
+Move ordering based on the number of captures
+	529 - 471 - 0
+
+Move ordering adding an extra bonus for single moves
+	280 - 220 - 0	(40 +- 30)
+
+Razoring with a delta of 10 tiles
+	523 - 447 - 0	(27 +- 20)
+
+Reverse futility pruning
+	247 - 113 - 0	(135 +- 40)
+
+Late move reduction
+	286 - 214 - 0	(50 +- 30)
+
+Mobility
+	781 - 719 - 0	(15 +- 20)

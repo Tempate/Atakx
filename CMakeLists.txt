@@ -29,9 +29,29 @@ add_executable(
     src/hashtables.cpp
     src/moves.cpp
     src/alphabeta.cpp
-    src/mcts.cpp
     src/eval.cpp
+    
     src/tuner/tuner.cpp
     src/tuner/population.cpp
     src/tuner/player.cpp
+)
+
+# Add the executable
+add_executable(
+    Funes-tests
+    src/lookup.cpp
+    src/bitboard.cpp
+    src/board.cpp
+    src/hashtables.cpp
+    src/moves.cpp
+    src/alphabeta.cpp
+    src/eval.cpp
+    src/uai.cpp
+    
+    src/tuner/tuner.cpp
+    src/tuner/population.cpp
+    src/tuner/player.cpp
+
+    tests/main.cpp
+    tests/test_mates.cpp
 )

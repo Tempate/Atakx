@@ -1,10 +1,10 @@
 #include <sstream>
 
-#include "hashtables.h"
-#include "lookup.h"
-#include "uai.h"
+#include "hashtables.hpp"
+#include "lookup.hpp"
+#include "uai.hpp"
 
-#include "board.h"
+#include "board.hpp"
 
 Board::Board() {
     blank();
@@ -27,10 +27,10 @@ void Board::blank() {
     turn = BLUE;
 }
 
-// Generates a random empty board and
-// assigns the other squares randomly to each player.
+// Generates a random, empty bitboard and assigns 
+// the non-empty squares randomly to each player.
 // Therefore, the generated board will approximately have
-// 50% free squares, 25% blue pieces and 25% red pieces.
+// 50% empty squares, 25% blue pieces and 25% red pieces.
 // The generated board will have no gaps.
 void Board::random() {
     empty.random();
@@ -59,7 +59,7 @@ void Board::fromFen(const std::string &fen) {
 
     std::string boardString;
     char turnChar;
-    std::string plyString;
+    std::string fiftyMovesString;
 
     std::stringstream ss(fen);
 
@@ -73,8 +73,8 @@ void Board::fromFen(const std::string &fen) {
         exit(0);
     }
 
-    if (ss >> plyString)
-        ply = std::stoi(plyString);
+    if (ss >> fiftyMovesString)
+        fiftyMoves = std::stoi(fiftyMovesString);
 
     for (char c : boardString) {
         switch (c) {
@@ -237,19 +237,27 @@ int Board::countMoves() const {
 void Board::make(const Move &move) {
     const int opponent = turn ^ 1;
 
+    int fiftyMovesCounter = 0;
+
     if (move.type != NULL_MOVE) {
+        const Bitboard captures = singlesLookup[move.to] & pieces[opponent];
+
         pieces[turn] ^= Bitboard{move.to};
 
-        if (move.type == DOUBLE)
+        if (move.type == DOUBLE) {
             pieces[turn] ^= Bitboard{move.from};
 
-        Bitboard captures = singlesLookup[move.to] & pieces[opponent];
+            if (!captures)
+                fiftyMovesCounter = fiftyMoves + 1;
+        }
 
         pieces[turn] ^= captures;
         pieces[opponent] ^= captures;
 
         empty = ~(pieces[BLUE] | pieces[RED] | gaps);
     }
+
+    fiftyMoves = fiftyMovesCounter;
 
     turn = opponent;
     ++ply;
@@ -300,19 +308,6 @@ int Board::countCaptures(const Move &move) const {
 
     const Bitboard captures = singlesLookup[move.to] & pieces[turn ^ 1];
     return captures.popCount();
-}
-
-int Board::score() const {
-    int ownPieces = pieces[turn].popCount();
-    int otherPieces = pieces[turn ^ 1].popCount();
-
-    // This could be done without branching
-    if (ownPieces > otherPieces)
-        return MATE_SCORE;
-    else if (otherPieces > ownPieces)
-        return -MATE_SCORE;
-    else
-        return 0;
 }
 
 // Returns the state of the game:
@@ -372,30 +367,4 @@ uint64_t Board::perft(int depth) const {
     }
 
     return nodes;
-}
-
-std::chrono::high_resolution_clock::time_point Board::timeManagement(
-    std::chrono::high_resolution_clock::time_point start) const {
-    using namespace std::chrono;
-
-    high_resolution_clock::duration movetime = milliseconds(0);
-
-    if (settings.movetime)
-        return start + milliseconds(settings.movetime);
-
-    clock_t remaining, increment;
-
-    if (turn == BLUE) {
-        remaining = settings.wtime;
-        increment = settings.winc;
-    } else {
-        remaining = settings.btime;
-        increment = settings.binc;
-    }
-
-    if (remaining || increment)
-        movetime = milliseconds(
-            std::min(remaining >> 2, (remaining >> 5) + increment));
-
-    return start + movetime;
 }

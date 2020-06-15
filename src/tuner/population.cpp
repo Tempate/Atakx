@@ -1,5 +1,5 @@
-#include "population.h"
-#include "tuner.h"
+#include "population.hpp"
+#include "tuner.hpp"
 
 
 Population::Population() {
@@ -9,16 +9,7 @@ Population::Population() {
         population.push_back(player.reproduce());
 }
 
-/*
-constexpr std::vector<std::pair<int, int>> Population::genPairings() {
-    std::vector<std::pair<int, int>> pairings;
-
-    return pairings;
-}
-*/
-
 void Population::compete() {
-    //std::vector<std::pair<int, int>> combinations;
 
     for (int i = 0; i < population.size(); i++) {
         for (int j = 0; j < population.size(); j++) {

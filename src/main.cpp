@@ -1,20 +1,15 @@
 #include <sstream>
 #include <string>
 
-#include "board.h"
-#include "lookup.h"
-#include "uai.h"
-#include "tuner/tuner.h"
+#include "board.hpp"
+#include "lookup.hpp"
+#include "uai.hpp"
+#include "tuner/tuner.hpp"
 
-#include "main.h"
+#include "main.hpp"
 
 int main() {
-
     srand(time(NULL));
-
-    settings.init();
-
-    genLookupTables();
 
     #if TUNING
         tuner.run();

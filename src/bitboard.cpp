@@ -1,6 +1,6 @@
 #include <random>
 
-#include "bitboard.h"
+#include "bitboard.hpp"
 
 void Bitboard::random() {
     const uint64_t r = RAND_MAX * rand() + rand();
@@ -15,10 +15,8 @@ void Bitboard::print() const {
     std::cout << "----------------" << std::endl;
 
     for (int y = RANKS - 1; y >= 0; y--) {
-        for (int x = 0; x < FILES; x++) {
-            int found = (*this & Bitboard{x, y}) ? 1 : 0;
-            std::cout << found << " ";
-        }
+        for (int x = 0; x < FILES; x++)
+            std::cout << ((*this & Bitboard{x, y}) ? 1 : 0) << " ";
 
         std::cout << std::endl;
     }

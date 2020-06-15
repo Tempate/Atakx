@@ -1,17 +1,17 @@
 #include <algorithm>
 
-#include "bitboard.h"
-#include "board.h"
-#include "main.h"
+#include "bitboard.hpp"
+#include "board.hpp"
+#include "main.hpp"
 
-#include "hashtables.h"
+#include "hashtables.hpp"
 
 #define TURN_OFFSET 98
 
 TT tt;
 
 // This table has been taken from:
-// http://hardy.uhasselt.be/Toga/book_format.html
+// http://hardy.uhasselt.be/Toga/book_format.hpptml
 static const uint64_t randomKeys[100] = {
     0x9D39247E33776D41, 0x2AF7398005AAA5C7, 0x44DB015024623547,
     0x9C15F73E62A76AE2, 0x75834465489C0C89, 0x3290AC3A203001BF,

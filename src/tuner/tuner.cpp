@@ -1,10 +1,10 @@
-#include "../main.h"
-#include "../alphabeta.h"
-#include "../uai.h"
+#include "../main.hpp"
+#include "../alphabeta.hpp"
+#include "../uai.hpp"
 
-#include "population.h"
-#include "player.h"
-#include "tuner.h"
+#include "population.hpp"
+#include "player.hpp"
+#include "tuner.hpp"
 
 #include <fstream>
 #include <tuple>
@@ -100,10 +100,10 @@ int Tuner::play(const std::string &opening) {
     Board board{opening};
 
     while (board.empty.popCount() && board.pieces[board.turn].popCount()) {
-        settings.init();
+        Settings settings;
         settings.movetime = movetime;
         
-        const Move move = abSearch(board);
+        const Move move = abSearch(board, settings);
         board.make(move);
 
         if (board.ply > 1000)

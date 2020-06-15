@@ -1,21 +1,18 @@
 #include <sstream>
 #include <string>
 
-#include "main.h"
-#include "board.h"
-#include "hashtables.h"
-#include "alphabeta.h"
-#include "mcts.h"
+#include "main.hpp"
+#include "board.hpp"
+#include "hashtables.hpp"
+#include "alphabeta.hpp"
 
-#include "uai.h"
-
-Settings settings;
+#include "uai.hpp"
 
 void isready(void);
 void position(Board &board, const std::string &s);
 void go(Board &board, const std::string &s);
 void perft(const Board &board, const int depth);
-Move bestmove(const Board &board);
+Move bestmove(const Board &board, Settings &settings);
 
 pthread_t worker;
 int working = 0;
@@ -90,6 +87,7 @@ void go(Board &board, const std::string &s) {
     std::stringstream ss(s);
     ss >> cmd;
 
+    Settings settings;
     settings.init();
 
     if (cmd.compare("infinite") == 0) {
@@ -111,9 +109,9 @@ void go(Board &board, const std::string &s) {
     else if (cmd.compare("movetime") == 0)
         settings.movetime = std::stoi(s.substr(9));
 
-    const Move move = bestmove(board);
+    const Move move = bestmove(board, settings);
 
-    std::cout << "bestmove " << move.toString() << std::endl;
+    std::cout << "bestmove " << move << std::endl;
 }
 
 void perft(const Board &board, const int depth) {
@@ -138,7 +136,7 @@ void perft(const Board &board, const int depth) {
     }
 }
 
-Move bestmove(const Board &board) {
+Move bestmove(const Board &board, Settings &settings) {
     Move bestMove;
 
     if (TYPE == RANDOM_PLAYER) {
@@ -163,10 +161,7 @@ Move bestmove(const Board &board) {
     }
 
     else if (TYPE == ALPHABETA)
-        bestMove = abSearch(board);
-
-    else if (TYPE == MCTS)
-        bestMove = uctSearch(board);
+        bestMove = abSearch(board, settings);
 
     return bestMove;
 }

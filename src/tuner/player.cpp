@@ -1,4 +1,4 @@
-#include "player.h"
+#include "player.hpp"
 
 int Player::psqtScore(const Board &board, const int side) const {
     Bitboard bb = Bitboard{(uint64_t) 1ULL};

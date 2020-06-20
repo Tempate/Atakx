@@ -43,8 +43,10 @@ public:
 
     void print() const;
 
+    Bitboard singles() const;
+
     static constexpr Bitboard full() {
-        return Bitboard{(uint64_t)0x1ffffffffffff};
+        return Bitboard{(uint64_t) 0b1111111111111111111111111111111111111111111111111};
     }
 
     constexpr int getSquare(int file, int rank) { 
@@ -63,7 +65,9 @@ public:
         return Bitboard{value | bb.value};
     }
 
-    constexpr Bitboard operator~() const { return Bitboard{~value} & full(); }
+    constexpr Bitboard operator~() const { 
+        return Bitboard{~value} & full();
+    }
 
     constexpr Bitboard operator<<(const int n) const {
         return Bitboard{value << n} & full();

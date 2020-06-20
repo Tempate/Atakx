@@ -23,3 +23,15 @@ void Bitboard::print() const {
 
     std::cout << "----------------" << std::endl;
 }
+
+Bitboard Bitboard::singles() const {
+    static const Bitboard notAFileBB = Bitboard{(uint64_t) 0b1111110111111011111101111110111111011111101111110};
+    static const Bitboard notGFileBB = Bitboard{(uint64_t) 0b0111111011111101111110111111011111101111110111111};
+
+    const Bitboard thisNotAFile = *this & notAFileBB;
+    const Bitboard thisNotGFile = *this & notGFileBB;
+
+    return ((thisNotAFile >> 8) | (thisNotAFile >> 1) | (thisNotAFile << 6) |
+            (thisNotGFile << 8) | (thisNotGFile << 1) | (thisNotGFile >> 6) |
+            (*this << 7) | (*this >> 7)) & Bitboard{}.full();
+}

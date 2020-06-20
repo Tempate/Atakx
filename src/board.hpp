@@ -15,7 +15,7 @@ enum {MAKE, UNDO};
 
 class Board {
 public:
-    Bitboard pieces[2];
+    Bitboard stones[2];
     Bitboard empty;
     Bitboard gaps;
 
@@ -39,19 +39,19 @@ public:
     std::vector<Move> genMoves() const;
     int countMoves() const;
 
-    void make(const Move &move);
+    std::vector<Move> genCaptures(const int sqr) const;
+    bool isMoveLegal(const Move &move) const;
+    int countCaptures(const Move &move) const;
 
+    void make(const Move &move);
     void print() const;
 
     void playSequence(const std::string &moves);
-    int countCaptures(const Move &move) const;
     
     float state(const bool adjudicate) const;
 
     uint64_t perft(int depth) const;
     uint64_t ttPerft(int depth) const;
-
-    void genKey();
 };
 
 constexpr static inline int getRank(const int sqr) { return sqr / RANKS; }

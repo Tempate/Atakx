@@ -16,21 +16,21 @@ Board::Board(const std::string &fen) {
 }
 
 void Board::blank() {
-    pieces[BLUE] = Bitboard{};
-    pieces[RED] = Bitboard{};
+    stones[BLACK] = Bitboard{};
+    stones[WHITE] = Bitboard{};
 
     empty = Bitboard{}.full();
     gaps = Bitboard{};
 
     key = 0;
 
-    turn = BLUE;
+    turn = BLACK;
 }
 
 // Generates a random, empty bitboard and assigns 
 // the non-empty squares randomly to each player.
 // Therefore, the generated board will approximately have
-// 50% empty squares, 25% blue pieces and 25% red pieces.
+// 50% empty squares, 25% blue stones and 25% red stones.
 // The generated board will have no gaps.
 void Board::random() {
     empty.random();
@@ -39,12 +39,12 @@ void Board::random() {
 
     for (int sqr : bb) {
         const int color = rand() % 2;
-        pieces[color] |= Bitboard{sqr};
+        stones[color] |= Bitboard{sqr};
     }
 
     turn = rand() % 2;
 
-    genKey();
+    key = tt.gen_key(*this);
 }
 
 void Board::startpos() { 
@@ -95,14 +95,14 @@ void Board::fromFen(const std::string &fen) {
         case 'X':
         case 'b':
         case 'B':
-            pieces[BLUE] |= Bitboard{file, rank};
+            stones[BLACK] |= Bitboard{file, rank};
             ++file;
             break;
         case 'o':
         case 'O':
         case 'w':
         case 'W':
-            pieces[RED] |= Bitboard{file, rank};
+            stones[WHITE] |= Bitboard{file, rank};
             ++file;
             break;
         case '-':
@@ -110,8 +110,7 @@ void Board::fromFen(const std::string &fen) {
             ++file;
             break;
         default:
-            std::cout << "[-] Unknown character on board's fen: " << c
-                      << std::endl;
+            std::cout << "[-] Unknown character on board's fen: " << c << std::endl;
             exit(0);
         }
     }
@@ -121,22 +120,22 @@ void Board::fromFen(const std::string &fen) {
     case 'X':
     case 'b':
     case 'B':
-        turn = BLUE;
+        turn = BLACK;
         break;
     case 'o':
     case 'O':
     case 'w':
     case 'W':
-        turn = RED;
+        turn = WHITE;
         break;
     default:
         std::cout << "[-] Unknown turn character: " << turnChar << std::endl;
         exit(0);
     }
 
-    empty = ~(pieces[BLUE] | pieces[RED] | gaps);
+    empty = ~(stones[BLACK] | stones[WHITE] | gaps);
 
-    genKey();
+    key = tt.gen_key(*this);
 }
 
 std::string Board::toFen() const {
@@ -158,10 +157,10 @@ std::string Board::toFen() const {
                     blanks = 0;
                 }
 
-                if (pieces[BLUE] & sqr)
-                    fen += players[BLUE];
-                else if (pieces[RED] & sqr)
-                    fen += players[RED];
+                if (stones[BLACK] & sqr)
+                    fen += players[BLACK];
+                else if (stones[WHITE] & sqr)
+                    fen += players[WHITE];
                 else
                     fen += '-';
             }
@@ -189,7 +188,7 @@ std::vector<Move> Board::genMoves() const {
     std::vector<Move> moves;
     moves.reserve(32);
 
-    Bitboard bb = pieces[turn];
+    Bitboard bb = stones[turn];
     Bitboard sMoves;
 
     for (int sqr : bb) {
@@ -213,13 +212,29 @@ std::vector<Move> Board::genMoves() const {
     return moves;
 }
 
+bool Board::isMoveLegal(const Move &move) const {
+    const Bitboard free_destination = empty & Bitboard{move.to};
+
+    switch (move.type) {
+    case SINGLE:
+        return free_destination && (singlesLookup[move.to] & stones[turn]);
+    case DOUBLE:
+        return (free_destination & doublesLookup[move.from]) && (stones[turn] & Bitboard{move.from});
+    case NULL_MOVE:
+        return countMoves() == 0;
+    default:
+        assert(false);
+        return false;
+    }
+}
+
 // Counts the moves in a given position without
 // adding them to the move list.
-// This function is only used on perft.
+// This function is only used in perft.
 int Board::countMoves() const {
     int nMoves = 0;
 
-    Bitboard bb = pieces[turn];
+    Bitboard bb = stones[turn];
     Bitboard sMoves;
 
     for (int sqr : bb) {
@@ -234,33 +249,64 @@ int Board::countMoves() const {
     return nMoves;
 }
 
+std::vector<Move> Board::genCaptures(const int sqr) const {
+    const Bitboard bb = Bitboard{sqr};
+    const Bitboard attackers = doublesLookup[sqr] & stones[turn];
+    const Bitboard holes = singlesLookup[sqr] & empty;
+
+    std::vector<Move> moves;
+    Bitboard sMoves;
+
+    for (int attacker : attackers) {
+        sMoves |= singlesLookup[attacker] & holes;
+
+        //const Bitboard dMoves = doublesLookup[sqr] & holes;
+
+        // Add double moves
+        //((for (int to : dMoves)
+        //    moves.emplace_back(attacker, to, DOUBLE);
+    }
+
+    // Add single moves
+    for (int to : sMoves)
+        moves.emplace_back(to);
+
+    return moves;
+}
+
+int Board::countCaptures(const Move &move) const {
+    if (move.type == NULL_MOVE)
+        return 0;
+
+    const Bitboard captures = singlesLookup[move.to] & stones[turn ^ 1];
+    return captures.popCount();
+}
+
 void Board::make(const Move &move) {
     const int opponent = turn ^ 1;
 
     int fiftyMovesCounter = 0;
 
     if (move.type != NULL_MOVE) {
-        const Bitboard captures = singlesLookup[move.to] & pieces[opponent];
+        const Bitboard captures = singlesLookup[move.to] & stones[opponent];
 
-        pieces[turn] ^= Bitboard{move.to};
+        stones[turn] ^= Bitboard{move.to};
 
         if (move.type == DOUBLE) {
-            pieces[turn] ^= Bitboard{move.from};
-
-            if (!captures)
-                fiftyMovesCounter = fiftyMoves + 1;
+            stones[turn] ^= Bitboard{move.from};
+            fiftyMovesCounter = fiftyMoves + 1;
         }
 
-        pieces[turn] ^= captures;
-        pieces[opponent] ^= captures;
+        stones[turn] ^= captures;
+        stones[opponent] ^= captures;
 
-        empty = ~(pieces[BLUE] | pieces[RED] | gaps);
+        empty = ~(stones[BLACK] | stones[WHITE] | gaps);
     }
 
     fiftyMoves = fiftyMovesCounter;
 
     turn = opponent;
-    ++ply;
+    ply++;
 }
 
 void Board::print() const {
@@ -270,9 +316,9 @@ void Board::print() const {
         for (int x = 0; x < FILES; x++) {
             Bitboard sqr(x, y);
 
-            if (pieces[BLUE] & sqr)
+            if (stones[BLACK] & sqr)
                 std::cout << "x ";
-            else if (pieces[RED] & sqr)
+            else if (stones[WHITE] & sqr)
                 std::cout << "o ";
             else if (empty & sqr)
                 std::cout << ". ";
@@ -284,7 +330,7 @@ void Board::print() const {
     }
 
     std::cout << std::endl;
-    std::cout << "Turn: " << (turn == BLUE ? "blue" : "red") << "\n"
+    std::cout << "Turn: " << (turn == BLACK ? "blue" : "red") << "\n"
               << std::endl;
 }
 
@@ -300,16 +346,6 @@ void Board::playSequence(const std::string &movesString) {
     }
 }
 
-int Board::countCaptures(const Move &move) const {
-    assert(move.to >= 0 && move.to < 49);
-
-    if (move.type == NULL_MOVE)
-        return 0;
-
-    const Bitboard captures = singlesLookup[move.to] & pieces[turn ^ 1];
-    return captures.popCount();
-}
-
 // Returns the state of the game:
 //      1   won
 //      0.5 draw
@@ -321,24 +357,24 @@ int Board::countCaptures(const Move &move) const {
 
 // In any other case it returns NOT_FINISHED
 float Board::state(const bool adjudicate) const {
-    if (!pieces[turn])
+    if (!stones[turn])
         return 0;
     
-    if (!pieces[turn ^ 1])
+    if (!stones[turn ^ 1])
         return 1;
 
     if (adjudicate == false) {
         if (empty)
             return NOT_FINISHED;
 
-        const int a = pieces[turn].popCount();
-        const int b = pieces[turn ^ 1].popCount();
+        const int a = stones[turn].popCount();
+        const int b = stones[turn ^ 1].popCount();
         
         return (a > b) ? 1 : 0;
     }
 
-    const int a = pieces[turn].popCount();
-    const int b = pieces[turn ^ 1].popCount();
+    const int a = stones[turn].popCount();
+    const int b = stones[turn ^ 1].popCount();
     const int c = empty.popCount();
     
     if (a - c > b)

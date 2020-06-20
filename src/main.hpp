@@ -22,7 +22,7 @@ enum { RANDOM_PLAYER, MOST_CAPTURES, ALPHABETA };
 
 #define MATE_SCORE 100000
 
-enum { BLUE, RED };
+enum { BLACK, WHITE };
 
 struct Stats {
     int ttHits;

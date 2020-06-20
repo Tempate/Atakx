@@ -99,7 +99,7 @@ void Tuner::match(Player &player1, Player &player2) {
 int Tuner::play(const std::string &opening) {
     Board board{opening};
 
-    while (board.empty.popCount() && board.pieces[board.turn].popCount()) {
+    while (board.empty.popCount() && board.stones[board.turn].popCount()) {
         Settings settings;
         settings.movetime = movetime;
         
@@ -112,7 +112,7 @@ int Tuner::play(const std::string &opening) {
 
     int winner = board.turn ^ 1;
 
-    if (board.empty.popCount() == 0 && board.pieces[board.turn].popCount() > 24)
+    if (board.empty.popCount() == 0 && board.stones[board.turn].popCount() > 24)
         winner = board.turn;
 
     return winner;

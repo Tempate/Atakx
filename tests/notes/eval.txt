@@ -1,0 +1,30 @@
+PSQT General
+    141 - 38 - 1    (226 +- 63)
+
+    Strong corners
+    110 - 55 - 5    (117 +- 55)
+
+    Strong border
+    167 - 60 - 3    (175 +- 51)
+
+    Endgame reduction
+    2265 - 1946 - 49  (26 +- 10)
+
+Bonus for being the second player
+    191 - 59 - 0    (204 +- 51)
+
+Holes
+    543 - 453 - 4   (31 +- 22)
+
+    Score of FunesHoles vs Funes: 4671 - 4480 - 69  [0.510] 9220
+    7.20 +/- 7.06
+
+Score of FunesHoles vs Funes: 824 - 722 - 14  [0.533] 1560
+22.75 +/- 17.19
+
+Score of FunesHoles vs Funes: 142 - 77 - 1  [0.648] 220
+105.81 +/- 48.26
+
+Score of FunesNew vs FunesOld: 73 - 37 - 0  [0.664] 110
+118.05 +/- 69.84
+

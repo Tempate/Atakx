@@ -6,6 +6,9 @@ Move ordering based on the number of captures
 Move ordering adding an extra bonus for single moves
 	280 - 220 - 0	(40 +- 30)
 
+Move ordering giving a bonus to double moves from the corner
+	983 - 832 - 15	(29 +- 16)
+
 Razoring with a delta of 10 tiles
 	523 - 447 - 0	(27 +- 20)
 
@@ -15,5 +18,5 @@ Reverse futility pruning
 Late move reduction
 	286 - 214 - 0	(50 +- 30)
 
-Mobility
-	781 - 719 - 0	(15 +- 20)
+Late move pruning
+	1106 - 976 - 18  (22 +- 15)

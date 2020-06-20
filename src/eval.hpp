@@ -3,6 +3,6 @@
 
 int eval(const Board &board);
 
-extern const int tileValue;
+extern const int stone_value;
 
 #endif // #ifndef EVAL_HPP_

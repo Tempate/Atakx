@@ -22,7 +22,7 @@ void test_mates() {
 void test_give_mates_in_one() {
     Settings settings;
     settings.init();
-    settings.depth = 2;
+    settings.depth = 7;
     settings.timed = false;
 
     std::vector<std::pair<Board, Move>> mates = {
@@ -50,7 +50,7 @@ void test_give_mates_in_one() {
 void test_avoid_mates_in_one() {
     Settings settings;
     settings.init();
-    settings.depth = 3;
+    settings.depth = 7;
     settings.timed = false;
 
     std::vector<std::pair<Board, Move>> mates = {
@@ -76,7 +76,7 @@ void test_avoid_mates_in_one() {
 void test_give_mates_in_two() {
     Settings settings;
     settings.init();
-    settings.depth = 3;
+    settings.depth = 7;
     settings.timed = false;
 
     std::vector<std::pair<Board, Move>> mates = {

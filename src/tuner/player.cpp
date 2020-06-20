@@ -6,7 +6,7 @@ int Player::psqtScore(const Board &board, const int side) const {
     int score = 0;
 
     for (int i = 0; i < dna.size(); i++) {
-        score += dna[i] * (board.pieces[side] & bb).popCount();
+        score += dna[i] * (board.stones[side] & bb).popCount();
         bb = bb << 1;
     }
 

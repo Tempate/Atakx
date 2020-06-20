@@ -17,14 +17,14 @@ struct Move {
 
     Move() : type(NULL_MOVE) {}
 
-    Move(int to) : to(to), type(SINGLE) {}
+    Move(int to) : to(to), from(-1), type(SINGLE) {}
 
-    Move(int from, int to, int type) : from(from), to(to), type(type) {}
+    Move(int from, int to, int type): 
+    from(from), to(to), type(type) {}
 
     Move(std::string moveString);
 
     friend std::ostream& operator<<(std::ostream& os, const Move &move);
-
     void print() const;
 
     constexpr bool operator==(const Move &move) const {
@@ -41,7 +41,8 @@ struct Move {
             return !(from == move.from && to == move.to);
     }
 
-    int coordToSqr(std::string coord) {
+    private:
+    int coordToSqr(std::string coord) const {
         return Bitboard{}.getSquare(coord[0] - 'a', coord[1] - '1');
     }
 };

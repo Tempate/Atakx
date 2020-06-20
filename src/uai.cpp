@@ -45,7 +45,7 @@ void uai() {
         else if (cmd.compare("ucinewgame") == 0) {
             board.startpos();
             tt.clear();
-        } 
+        }
         
         else if (cmd.compare("position") == 0)
             position(board, msg.substr(9));
@@ -60,7 +60,9 @@ void uai() {
     }
 }
 
-void isready() { std::cout << "readyok" << std::endl; }
+void isready() { 
+    std::cout << "readyok" << std::endl; 
+}
 
 // Sets the board to a certain position
 // position (startpos | fen? <fen>) (moves e2e4 c7c5)?

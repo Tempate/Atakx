@@ -8,11 +8,12 @@
 
 int countHoles(const Board &board, const int side);
 int psqtScore(const Board &board, const int side);
+int holesScore(const Board &board, const int side);
 
-const int tileValue = 100;
+const int stone_value = 100;
 
 int eval(const Board &board) {
-    const int material = board.pieces[board.turn].popCount() - board.pieces[board.turn ^ 1].popCount();
+    const int material = board.stones[board.turn].popCount() - board.stones[board.turn ^ 1].popCount();
     
     #if TUNING
         const int psqt = tuner.tunePsqtScore(board, board.turn) - tuner.tunePsqtScore(board, board.turn ^ 1);
@@ -20,45 +21,71 @@ int eval(const Board &board) {
         const int psqt = psqtScore(board, board.turn) - psqtScore(board, board.turn ^ 1);
     #endif
 
-    return tileValue * (material + 10 * board.turn) + psqt;
+    const int holes = holesScore(board, board.turn) - holesScore(board, board.turn ^ 1);
+
+    return stone_value * (material + 10 * board.turn) + psqt + holes;
 }
 
 int psqtScore(const Board &board, const int side) {
-    int score;
-
-    static const std::array<std::pair<Bitboard, int>, 2> phases = {
-        std::make_pair(Bitboard{(uint64_t) 0b1000001000000000000000000000000000000000001000001}, 90),
-        std::make_pair(Bitboard{(uint64_t) 0b0111110100000110000011000001100000110000010111110}, 70)
+    /*
+    static const std::array<int, 49> psqt_normal = {
+        90, 70, 70, 70, 70, 70, 90,
+        70,  0,  0,  0,  0,  0, 70,
+        70,  0,  0,  0,  0,  0, 70,
+        70,  0,  0,  0,  0,  0, 70,
+        70,  0,  0,  0,  0,  0, 70,
+        70,  0,  0,  0,  0,  0, 70,
+        90, 70, 70, 70, 70, 70, 90
     };
 
-    for (const auto &[bb, value] : phases)
-        score += (board.pieces[side] & bb).popCount() * value;
+    static const std::array<int, 49> psqt_endgame = {
+        45, 35, 35, 35, 35, 35, 45,
+        35,  0,  0,  0,  0,  0, 35,
+        35,  0,  0,  0,  0,  0, 35,
+        35,  0,  0,  0,  0,  0, 35,
+        35,  0,  0,  0,  0,  0, 35,
+        35,  0,  0,  0,  0,  0, 35,
+        45, 35, 35, 35, 35, 35, 45
+    };
+
+    const auto psqt = (board.empty.popCount() > 10) ? psqt_normal : psqt_endgame;
+    */
+
+    static const std::array<std::pair<Bitboard, int>, 3> psqt_normal = {
+        std::make_pair(Bitboard{(uint64_t) 0b1000001000000000000000000000000000000000001000001}, 90),
+        std::make_pair(Bitboard{(uint64_t) 0b0111110100000110000011000001100000110000010111110}, 70),
+        std::make_pair(Bitboard{(uint64_t) 0b0000000000000000000000001000000000000000000000000}, 0)
+    };
+
+    static const std::array<std::pair<Bitboard, int>, 3> psqt_endgame = {
+        std::make_pair(Bitboard{(uint64_t) 0b1000001000000000000000000000000000000000001000001}, 30),
+        std::make_pair(Bitboard{(uint64_t) 0b0111110100000110000011000001100000110000010111110}, 10),
+        std::make_pair(Bitboard{(uint64_t) 0b1100011110001100000000000000000000011000111100011}, 0)
+    };
+
+    const auto psqt = (board.empty.popCount() > 5) ? psqt_normal : psqt_endgame;
+
+    int score = 0;
+
+    for (const auto &[bb, value] : psqt)
+        score += value * (bb & board.stones[side]).popCount();
 
     return score;
 }
 
-/*
-int psqtScore(const Board &board, const int side) {
-    static const std::array<int, FILES * RANKS> psqt = {
-        120, 50, 59, 50, 50, 72, 120,
-        44, 0, 0, -9, 10, 7, 44,
-        48, 5, 14, 0, -2, -9, 60,
-        55, 0, 7, -31, 0, -8, 53,
-        49, -4, 0, 4, 0, 0, 62,
-        99, 3, 0, -8, 3, -4, 46,
-        119, 30, 42, 50, 60, 60, 120
-    };
+int holesScore(const Board &board, const int side) {
+    static const std::array<int, 8> penalties = {0, 25, 50, 100, 150, 250, 350, 400};
 
-    Bitboard bb{(uint64_t) 1};
+    const Bitboard bb = board.stones[side].singles() & 
+                        board.stones[side ^ 1].singles() &
+                        board.empty;
+
     int score = 0;
 
-    for (const int value : psqt) {
-        if (board.pieces[side] & bb)
-            score += value;
-
-        bb = bb << 1;
+    for (int sqr : bb) {
+        const int weak = (singlesLookup[sqr] & board.stones[side]).popCount();
+        score -= penalties[weak-1];
     }
 
     return score;
 }
-*/

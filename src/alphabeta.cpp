@@ -16,6 +16,8 @@ int alphabeta(const Board &board, Settings &settings, std::vector<Move> &pv,
               const high_resolution_clock::time_point &end, const int depth,
               int alpha, int beta);
 
+// int qsearch(const Board &board, const Move &move, const int depth, int alpha, int beta);
+
 void sort(std::vector<Move> &moves, const Board &board);
 void insertionSort(std::vector<Move> &moves);
 
@@ -25,18 +27,25 @@ void infoString(const int depth, const int score, const uint64_t nodes,
 high_resolution_clock::time_point timeManagement(const Board &board, Settings &settings, high_resolution_clock::time_point start);
 
 Stats stats;
+//std::array<Move, 1000> killerMoves;
 
 Move abSearch(const Board &board, Settings &settings) {
     std::vector<Move> pv;
     Move bestMove;
+
+    //for (int i = 0; i < killerMoves.size(); i++)
+    //    killerMoves[i] = Move{};
 
     const int alpha = -MATE_SCORE;
     const int beta = MATE_SCORE;
 
     settings.nodes = 0;
 
-    const high_resolution_clock::time_point start = high_resolution_clock::now();
+    #ifdef DEBUG
+        stats.ttHits = 0;
+    #endif
 
+    const high_resolution_clock::time_point start = high_resolution_clock::now();
     high_resolution_clock::time_point end;
     
     if (settings.timed)
@@ -83,27 +92,34 @@ int alphabeta(const Board &board, Settings &settings, std::vector<Move> &pv,
     if (depth <= 0)
         return eval(board);
 
-    Entry entry = tt.get(board.key);
-
     // Transposition Table
     /*
-    if (entry.key == board.key && entry.depth == depth) {
+    const Entry entry = tt.get_entry(board.key);
+
+    assert(board.key != 0);
+
+    if (entry.key == board.key && entry.depth >= depth && board.isMoveLegal(entry.bestMove)) {
+        assert(entry.key != 0);
+        assert(entry.depth != 0);
+
         #ifdef DEBUG
             ++stats.ttHits;
         #endif
 
         switch (entry.flag) {
         case LOWER_BOUND:
-            alpha = std::max(alpha, entry.score);
-            break;
-        case UPPER_BOUND:
-            beta = std::min(beta, entry.score);
-            break;
-        case EXACT:
-            return entry.score;
-        }
+            if (entry.score < beta)
+                break;
 
-        if (alpha >= beta) {
+            pv.assign(1, entry.bestMove);
+            return entry.score;
+        case UPPER_BOUND:
+            if (entry.score > alpha)
+                break;
+
+            pv.assign(1, entry.bestMove);
+            return entry.score;
+        case EXACT:
             pv.assign(1, entry.bestMove);
             return entry.score;
         }
@@ -111,8 +127,8 @@ int alphabeta(const Board &board, Settings &settings, std::vector<Move> &pv,
     */
 
     const int staticEval = eval(board);
-    const int delta = 10 * tileValue;
-    const bool pvNode = beta - alpha > 1;
+    const int delta = 10 * stone_value;
+    const int prevAlpha = alpha;
 
     std::vector<Move> childPV;
 
@@ -121,44 +137,44 @@ int alphabeta(const Board &board, Settings &settings, std::vector<Move> &pv,
         return staticEval;
 
     // Reverse Futility Pruning
-	if (depth <= 4 && staticEval - depth * tileValue > beta)
+	if (depth <= 4 && staticEval - depth * stone_value > beta)
         return staticEval;
 
     int bestScore = std::numeric_limits<int>::min();
 
     std::vector<Move> moves = board.genMoves();
-
     assert(moves.size() > 0);
 
     if (moves[0].type == NULL_MOVE) {
-        const int ownPieces = board.pieces[board.turn].popCount();
-        const int otherPieces = board.pieces[board.turn ^ 1].popCount();
+        const int ownPieces = board.stones[board.turn].popCount();
+        const int otherPieces = board.stones[board.turn ^ 1].popCount();
 
         if (board.empty.popCount() == 0) {
             if (ownPieces > otherPieces)
-                return MATE_SCORE; // + depth;
+                return MATE_SCORE;
             else if (otherPieces > ownPieces)
-                return -MATE_SCORE; // - depth;
+                return -MATE_SCORE;
             else
                 return 0;
         }
 
         if (ownPieces == 0)
-            return -MATE_SCORE; // - depth;
+            return -MATE_SCORE;
     } else
         sort(moves, board);
 
-    for (const Move move : moves) {
+    for (const Move &move : moves) {
         // Late move pruning
 		// Skip quiet moves on low depths
-		if (depth <= 6 && move.score <= 1 && bestScore > std::numeric_limits<int>::min())
-            continue;
+		if (((depth <= 2 && move.score <= 2) || (depth <= 6 && move.score <= 1)) && 
+            bestScore > std::numeric_limits<int>::min())
+            break;
 
         Board copy = board;
+        copy.key = tt.update_key(copy, move);
         copy.make(move);
-        copy.genKey();
 
-        const int score = -alphabeta(copy, settings, childPV, end, depth - 1, -beta, -alpha);
+        int score = -alphabeta(copy, settings, childPV, end, depth - 1, -beta, -alpha);
 
         if (score > bestScore) {
             bestScore = score;
@@ -169,8 +185,12 @@ int alphabeta(const Board &board, Settings &settings, std::vector<Move> &pv,
             if (bestScore > alpha) {
                 alpha = bestScore;
 
-                if (alpha >= beta)
+                if (alpha >= beta) {
+                    //if (board.countCaptures(move) == 0)
+                    //    killerMoves[board.ply] = move;
+
                     break;
+                }
             }
         }
     }
@@ -178,34 +198,93 @@ int alphabeta(const Board &board, Settings &settings, std::vector<Move> &pv,
     assert(bestScore > std::numeric_limits<int>::min());
 
     /*
-    int flag = EXACT;
+    int flag;
 
-    if (bestScore <= prevAlpha)
-        flag = UPPER_BOUND;
-    else if (bestScore >= beta)
+    if (bestScore >= beta)
         flag = LOWER_BOUND;
+    else if (bestScore <<= prevAlpha)
+        flag = UPPER_BOUND;
+    else
+        flag = EXACT;
 
     // Always replace the entry for the TT
     assert(pv.size() > 0);
-    tt.add(board.key, pv[0], bestScore, depth, flag);
+
+    tt.save_entry(Entry{board.key, pv[0], depth, bestScore, flag});
     */
 
-   return bestScore;
-
-    /*
-    if (bestScore < 0)
-        return bestScore + depth;
-    else
-        return bestScore - depth;
-    */
+    return bestScore;
 }
 
+/*
+int qsearch(const Board &board, const Move &last_move, const int depth, int alpha, int beta) {
+    const int standPat = eval(board);
+
+    if (depth <= 0)
+        return standPat;
+
+    if (standPat >= beta)
+        return beta;
+
+    if (alpha < standPat)
+        alpha = standPat;
+
+    // Delta pruning
+    if (standPat + stone_value < alpha)
+    	return alpha;
+
+    std::vector<Move> moves = board.genCaptures(last_move.to);
+
+    if (moves.size() == 0)
+        return alpha;
+
+    sort(moves, board);
+
+    for (const Move &move : moves) {
+        if (!(singlesLookup[last_move.to] & Bitboard{move.to}))
+            continue;
+
+        if (move.score <= 8)
+            break;
+
+        Board copy = board;
+        copy.make(move);
+        genKey(copy);
+
+        const int score = -qsearch(copy, move, depth - 1, -beta, -alpha);
+
+        if (score >= beta)
+            return beta;
+
+        if (score > alpha)
+            alpha = score;
+    }
+
+    return alpha;
+}
+*/
+
 void sort(std::vector<Move> &moves, const Board &board) {
+    static const std::array<int, FILES * RANKS> psqt = {
+        2, 0, 0, 0, 0, 0, 2,
+        0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0,
+        2, 0, 0, 0, 0, 0, 2
+    };
+
     for (Move &move : moves) {
         move.score = board.countCaptures(move);
 
-        if (move.type == SINGLE)
-            move.score += 2;
+        if (move.type == SINGLE) {
+            move.score += 3;
+        } else
+            move.score += psqt[move.from];
+
+        //if (killerMoves[board.ply] == move)
+        //    move.score += 4;
     }
 
     insertionSort(moves);
@@ -235,12 +314,12 @@ high_resolution_clock::time_point timeManagement(const Board &board, Settings &s
 
     clock_t remaining, increment;
 
-    if (board.turn == BLUE) {
-        remaining = settings.wtime;
-        increment = settings.winc;
-    } else {
+    if (board.turn == BLACK) {
         remaining = settings.btime;
         increment = settings.binc;
+    } else {
+        remaining = settings.wtime;
+        increment = settings.winc;
     }
 
     if (remaining || increment)
@@ -259,6 +338,8 @@ void infoString(const int depth, const int score, const uint64_t nodes,
         const long nps = 1000 * nodes / elapsed;
         std::cout << " nps " << nps;
     }
+
+    std::cout << " ttHits " << stats.ttHits;
 
     std::cout << " pv";
 

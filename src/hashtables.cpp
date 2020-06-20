@@ -1,5 +1,6 @@
 #include <algorithm>
 
+#include "lookup.hpp"
 #include "bitboard.hpp"
 #include "board.hpp"
 #include "main.hpp"
@@ -49,76 +50,102 @@ static const uint64_t randomKeys[100] = {
     0x5BFEA5B4712768E9};
 
 TT::TT() {
-    n = size * 1024 * 1024 / sizeof(Entry);
+    number_entries = size_kb * 1024 * 1024 / sizeof(Entry);
     clear();
 }
 
 void TT::clear() {
-    for (int i = 0; i < n; ++i)
-        entries[i] = Entry{};
+    entries.fill(Entry{});
 }
 
-Entry TT::get(const uint64_t key) {
-    assert(n > 0);
-
-    return entries[key % n];
+Entry TT::get_entry(const uint64_t key) const {
+    assert(number_entries > 0);
+    return entries[key % number_entries];
 }
 
-void TT::add(const uint64_t key, Move &bestMove, const int depth,
-             const int score, const int flag) {
-    assert(key != 0);
-    assert(n > 0);
+void TT::save_entry(const Entry &entry) {
+    assert(entry.key != 0);
+    assert(number_entries > 0);
 
-    entries[key % n] = Entry{key, bestMove, depth, score, flag};
+    entries[entry.key % number_entries] = entry;
 }
 
-uint64_t TT::perft(Board &board, const int depth) {
+uint64_t TT::gen_key(const Board &board) {
+    uint64_t key = 0;
+
+    key ^= gen_key_for_side(board, WHITE);
+    key ^= gen_key_for_side(board, BLACK);
+    key ^= randomKeys[TURN_OFFSET + board.turn];
+
+    return key;
+}
+
+uint64_t TT::gen_key_for_side(const Board &board, const int side) {
+    const Bitboard bb = board.stones[side];
+    const int offset = 49 * side;
+
+    uint64_t key = 0;
+
+    if (bb == Bitboard{})
+        return key;
+
+    for (int sqr : bb)
+        key ^= randomKeys[offset + sqr];
+
+    return key;
+}
+
+uint64_t TT::update_key(const Board &board, const Move &move) {
+    assert(board.key != 0);
+
+    const int offset = 49 * board.turn;
+    uint64_t key = board.key;
+
+    key ^= randomKeys[TURN_OFFSET + WHITE];
+    key ^= randomKeys[TURN_OFFSET + BLACK];
+
+    switch (move.type) {
+    case DOUBLE:
+        key ^= randomKeys[offset + move.from];
+        // no break
+    case SINGLE:
+        key ^= randomKeys[offset + move.to];
+
+        const Bitboard captures = singlesLookup[move.to] & board.stones[board.turn ^ 1];
+
+        for (int sqr : captures)
+            key ^= randomKeys[sqr] ^ randomKeys[49 + sqr];
+
+        break;
+    }
+
+    return key;
+}
+
+int TT::perft(Board &board, const int depth) {
     assert(depth > 0);
 
     if (depth == 1)
         return board.countMoves();
 
-    board.genKey();
-    Entry entry = get(board.key);
+    gen_key(board);
+    const Entry entry = get_entry(board.key);
 
     if (board.key == entry.key && entry.depth == depth)
         return entry.nodes;
 
-    uint64_t nodes = 0;
-
-    std::vector<Move> moves = board.genMoves();
+    const std::vector<Move> moves = board.genMoves();
+    int nodes = 0;
 
     for (const Move &move : moves) {
         Board copy = board;
         copy.make(move);
-        copy.genKey();
+        gen_key(copy);
 
         nodes += perft(copy, depth - 1);
     }
 
-    entries[board.key % n] = Entry{board.key, depth, nodes};
+    entries[board.key % number_entries] = Entry{board.key, depth, nodes};
 
     return nodes;
-}
-
-void Board::genKey() {
-    key = 0;
-
-    std::array<Bitboard, 2> bbs;
-
-    bbs[BLUE] = pieces[BLUE];
-    bbs[RED] = pieces[RED];
-
-    for (int color = BLUE; color <= RED; ++color) {
-        Bitboard bb = bbs[color];
-        const int offset = 49 * color;
-
-        if (bb)
-            do {
-                const int sqr = bb.bitScanForward();
-                key ^= randomKeys[offset + sqr];
-            } while (bb.unsetLSB());
-    }
-
-    key ^= randomKeys[TURN_OFFSET + turn];
 }

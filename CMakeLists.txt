@@ -55,4 +55,5 @@ add_executable(
     tests/main.cpp
     tests/test_mates.cpp
     tests/test_lookup_tables.cpp
+    tests/test_hashtable_keys.cpp
 )

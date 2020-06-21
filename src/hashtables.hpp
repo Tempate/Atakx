@@ -6,7 +6,7 @@
 #include "board.hpp"
 #include "moves.hpp"
 
-#define DEF_SIZE 1024
+#define DEF_SIZE 128
 #define DEF_ENTRIES DEF_SIZE * 1024 * 1024 / sizeof(Entry)
 
 struct Entry {

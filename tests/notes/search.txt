@@ -9,6 +9,9 @@ Move ordering adding an extra bonus for single moves
 Move ordering giving a bonus to double moves from the corner
 	983 - 832 - 15	(29 +- 16)
 
+Move ordering with TT move first
+	61 - 19 - 0		(203 +- 93)
+
 Razoring with a delta of 10 tiles
 	523 - 447 - 0	(27 +- 20)
 

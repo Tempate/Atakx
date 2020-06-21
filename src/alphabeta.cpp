@@ -95,38 +95,53 @@ int alphabeta(const Board &board, Settings &settings, std::vector<Move> &pv,
     // Transposition Table
     /*
     const Entry entry = tt.get_entry(board.key);
+    const bool tt_hit = entry.key == board.key;
+    */
+    int staticEval = eval(board);
 
     assert(board.key != 0);
 
-    if (entry.key == board.key && entry.depth >= depth && board.isMoveLegal(entry.bestMove)) {
+    /*
+    #ifdef DEBUG
+        if (tt_hit)
+            stats.ttHits++;
+    #endif
+    */
+
+    /*
+    if (tt_hit && entry.depth >= depth) {
         assert(entry.key != 0);
         assert(entry.depth != 0);
 
-        #ifdef DEBUG
-            ++stats.ttHits;
-        #endif
-
         switch (entry.flag) {
         case LOWER_BOUND:
-            if (entry.score < beta)
-                break;
-
-            pv.assign(1, entry.bestMove);
-            return entry.score;
-        case UPPER_BOUND:
             if (entry.score > alpha)
-                break;
+                alpha = entry.score;
 
-            pv.assign(1, entry.bestMove);
-            return entry.score;
+            break;
+        case UPPER_BOUND:
+            if (entry.score < beta)
+                beta = entry.score;
+
+            break;
         case EXACT:
-            pv.assign(1, entry.bestMove);
+            if (entry.depth == depth) {
+                pv.assign(1, entry.move);
+                return entry.score;
+            }
+
+            break;
+        }
+
+        if (alpha >= beta) {
+            pv.assign(1, entry.move);
             return entry.score;
         }
+
+        staticEval = entry.score;
     }
     */
 
-    const int staticEval = eval(board);
     const int delta = 10 * stone_value;
     const int prevAlpha = alpha;
 
@@ -139,6 +154,21 @@ int alphabeta(const Board &board, Settings &settings, std::vector<Move> &pv,
     // Reverse Futility Pruning
 	if (depth <= 4 && staticEval - depth * stone_value > beta)
         return staticEval;
+
+    // Null move reduction
+    /*
+	if (verySafe) {
+		static const int R = 3;
+		const int bound = beta;
+
+		makeNullMove(board, &history);
+		const int score = -pvSearch(board, depth - R - 1, -bound, -bound + 1, 1);
+		undoNullMove(board, &history);
+
+		if (score >= bound)
+			return pvSearch(board, depth - R, alpha, beta, 0);
+	}
+    */
 
     int bestScore = std::numeric_limits<int>::min();
 
@@ -174,7 +204,16 @@ int alphabeta(const Board &board, Settings &settings, std::vector<Move> &pv,
         copy.key = tt.update_key(copy, move);
         copy.make(move);
 
-        int score = -alphabeta(copy, settings, childPV, end, depth - 1, -beta, -alpha);
+        int reduct = 1;
+
+        /*
+        // Late move reduction
+        // Only quiet moves (excluding promotions) are reduced
+        if (depth >= 2 && move.score == 0)
+            reduct++;
+        */
+
+        int score = -alphabeta(copy, settings, childPV, end, depth - reduct, -beta, -alpha);
 
         if (score > bestScore) {
             bestScore = score;
@@ -197,12 +236,11 @@ int alphabeta(const Board &board, Settings &settings, std::vector<Move> &pv,
 
     assert(bestScore > std::numeric_limits<int>::min());
 
-    /*
-    int flag;
+    int flag = EXACT;
 
     if (bestScore >= beta)
         flag = LOWER_BOUND;
-    else if (bestScore <<= prevAlpha)
+    else if (bestScore <= prevAlpha)
         flag = UPPER_BOUND;
     else
         flag = EXACT;
@@ -211,7 +249,6 @@ int alphabeta(const Board &board, Settings &settings, std::vector<Move> &pv,
     assert(pv.size() > 0);
 
     tt.save_entry(Entry{board.key, pv[0], depth, bestScore, flag});
-    */
 
     return bestScore;
 }
@@ -248,8 +285,8 @@ int qsearch(const Board &board, const Move &last_move, const int depth, int alph
             break;
 
         Board copy = board;
+        copy.key = tt.update_key(copy, move);
         copy.make(move);
-        genKey(copy);
 
         const int score = -qsearch(copy, move, depth - 1, -beta, -alpha);
 
@@ -260,7 +297,7 @@ int qsearch(const Board &board, const Move &last_move, const int depth, int alph
             alpha = score;
     }
 
-    return alpha;
+    return score;
 }
 */
 
@@ -275,7 +312,14 @@ void sort(std::vector<Move> &moves, const Board &board) {
         2, 0, 0, 0, 0, 0, 2
     };
 
+    const Entry entry = tt.get_entry(board.key);
+
     for (Move &move : moves) {
+        if (entry.key == board.key && move == entry.move) {
+            move.score = 1000;
+            continue;
+        }
+
         move.score = board.countCaptures(move);
 
         if (move.type == SINGLE) {

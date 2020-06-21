@@ -18,8 +18,17 @@ Razoring with a delta of 10 tiles
 Reverse futility pruning
 	247 - 113 - 0	(135 +- 40)
 
-Late move reduction
-	286 - 214 - 0	(50 +- 30)
-
 Late move pruning
 	1106 - 976 - 18  (22 +- 15)
+
+Late move reductions
+	756 - 651 - 23	(26 +- 18)
+
+Research after successful reduction
+	964 - 832 - 24	(25 +- 16)
+
+Reduction after either moves with score 0 or moves that aren't the top 6
+	125 - 75 - 0	(89 +- 50)
+
+Reduction after either moves with score 0 or moves that aren't the top 4
+	182 - 118 - 0	(75 +- 40)

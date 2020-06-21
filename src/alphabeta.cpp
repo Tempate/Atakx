@@ -193,7 +193,9 @@ int alphabeta(const Board &board, Settings &settings, std::vector<Move> &pv,
     } else
         sort(moves, board);
 
-    for (const Move &move : moves) {
+    for (int i = 0; i < moves.size(); i++) {
+        const Move &move = moves[i];
+
         // Late move pruning
 		// Skip quiet moves on low depths
 		if (((depth <= 2 && move.score <= 2) || (depth <= 6 && move.score <= 1)) && 
@@ -206,14 +208,15 @@ int alphabeta(const Board &board, Settings &settings, std::vector<Move> &pv,
 
         int reduct = 1;
 
-        /*
         // Late move reduction
         // Only quiet moves (excluding promotions) are reduced
-        if (depth >= 2 && move.score == 0)
-            reduct++;
-        */
+        if (i > 3 || move.score == 0)
+            reduct += 2;
 
         int score = -alphabeta(copy, settings, childPV, end, depth - reduct, -beta, -alpha);
+
+        if (score > alpha && reduct > 1)
+            score = -alphabeta(copy, settings, childPV, end, depth - 1, -beta, -alpha);
 
         if (score > bestScore) {
             bestScore = score;

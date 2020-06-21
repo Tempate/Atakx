@@ -6,35 +6,26 @@
 #include "board.hpp"
 #include "moves.hpp"
 
-#define DEF_SIZE 128
+#define DEF_SIZE 1024
 #define DEF_ENTRIES DEF_SIZE * 1024 * 1024 / sizeof(Entry)
 
 struct Entry {
-    uint64_t key;
+    uint64_t key = 0;
 
-    int depth;
-    int score;
-    int flag;
-    int nodes;
+    int depth = 0;
+    int score = 0;
+    int flag  = 0;
+    int nodes = 0;
 
-    Move bestMove;
+    Move move;
 
-    Entry(): 
-    key(0), depth(0), score(0), flag(0), nodes(0) {};
+    Entry() {};
 
-    Entry(const uint64_t key, const Move &bestMove, const int depth, const int score, const int flag) {
-        this->key = key;
-        this->bestMove = bestMove;
-        this->depth = depth;
-        this->score = score;
-        this->flag = flag;
-    }
+    Entry(const uint64_t key, const Move &move, const int depth, const int score, const int flag):
+    key{key}, move{move}, depth{depth}, score{score}, flag{flag} {};
 
-    Entry(const uint64_t key, const int depth, const int nodes) {
-        this->key = key;
-        this->depth = depth;
-        this->nodes = nodes;
-    }
+    Entry(const uint64_t key, const int depth, const int nodes):
+        key{key}, depth{depth}, nodes{nodes} {};
 
     public:
     void print() const {
@@ -43,15 +34,13 @@ struct Entry {
         std::cout << "Depth: " << depth << std::endl;
         std::cout << "Score: " << score << std::endl;
         std::cout << "Flag: " << flag << std::endl;
-        std::cout << "Best move: " << bestMove << std::endl;
+        std::cout << "Move: " << move << std::endl;
     }
 };
 
 class TT {
     private:
     std::array<Entry, DEF_ENTRIES> entries;
-    int size_kb = DEF_SIZE;
-    int number_entries;
 
     public:
     TT();
@@ -59,7 +48,7 @@ class TT {
     void clear();
 
     Entry get_entry(const uint64_t key) const;
-    void save_entry(const Entry &entry);
+    void save_entry(const Entry entry);
 
     static uint64_t gen_key(const Board &board);
     static uint64_t update_key(const Board &board, const Move &move);

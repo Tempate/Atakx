@@ -50,7 +50,6 @@ static const uint64_t randomKeys[100] = {
     0x5BFEA5B4712768E9};
 
 TT::TT() {
-    number_entries = size_kb * 1024 * 1024 / sizeof(Entry);
     clear();
 }
 
@@ -59,15 +58,15 @@ void TT::clear() {
 }
 
 Entry TT::get_entry(const uint64_t key) const {
-    assert(number_entries > 0);
-    return entries[key % number_entries];
+    assert(entries.size() > 0);
+    return entries[key % entries.size()];
 }
 
-void TT::save_entry(const Entry &entry) {
+void TT::save_entry(const Entry entry) {
     assert(entry.key != 0);
-    assert(number_entries > 0);
+    assert(entries.size() > 0);
 
-    entries[entry.key % number_entries] = entry;
+    entries[entry.key % entries.size()] = entry;
 }
 
 uint64_t TT::gen_key(const Board &board) {
@@ -145,7 +144,7 @@ int TT::perft(Board &board, const int depth) {
         nodes += perft(copy, depth - 1);
     }
 
-    entries[board.key % number_entries] = Entry{board.key, depth, nodes};
+    save_entry(Entry{board.key, depth, nodes});
 
     return nodes;
 }

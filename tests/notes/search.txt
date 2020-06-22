@@ -32,3 +32,9 @@ Reduction after either moves with score 0 or moves that aren't the top 6
 
 Reduction after either moves with score 0 or moves that aren't the top 4
 	182 - 118 - 0	(75 +- 40)
+
+Research when the score is better than the best score
+	3291 - 2847 - 32	(25 +- 9)
+
+PV Search
+	2737 - 2527 - 46	(14 +- 9)

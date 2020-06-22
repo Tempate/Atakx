@@ -97,7 +97,8 @@ int alphabeta(const Board &board, Settings &settings, std::vector<Move> &pv,
     const Entry entry = tt.get_entry(board.key);
     const bool tt_hit = entry.key == board.key;
     */
-    int staticEval = eval(board);
+    int static_eval = eval(board);
+    //const int pvNode = beta - alpha > 2;
 
     assert(board.key != 0);
 
@@ -115,13 +116,17 @@ int alphabeta(const Board &board, Settings &settings, std::vector<Move> &pv,
 
         switch (entry.flag) {
         case LOWER_BOUND:
-            if (entry.score > alpha)
-                alpha = entry.score;
+            if (entry.score >= beta) {
+                pv.assign(1, entry.move);
+                return entry.score;
+            }
 
             break;
         case UPPER_BOUND:
-            if (entry.score < beta)
-                beta = entry.score;
+            if (entry.score <= alpha) {
+                pv.assign(1, entry.move);
+                return entry.score;
+            }
 
             break;
         case EXACT:
@@ -132,13 +137,6 @@ int alphabeta(const Board &board, Settings &settings, std::vector<Move> &pv,
 
             break;
         }
-
-        if (alpha >= beta) {
-            pv.assign(1, entry.move);
-            return entry.score;
-        }
-
-        staticEval = entry.score;
     }
     */
 
@@ -148,12 +146,12 @@ int alphabeta(const Board &board, Settings &settings, std::vector<Move> &pv,
     std::vector<Move> childPV;
 
    	// Razoring
-	if (depth == 1 && staticEval + delta < alpha)
-        return staticEval;
+	if (depth <= 1 && static_eval + delta < alpha)
+        return static_eval;
 
     // Reverse Futility Pruning
-	if (depth <= 4 && staticEval - depth * stone_value > beta)
-        return staticEval;
+	if (depth <= 4 && static_eval - depth * stone_value > beta)
+        return static_eval;
 
     // Null move reduction
     /*
@@ -209,13 +207,19 @@ int alphabeta(const Board &board, Settings &settings, std::vector<Move> &pv,
         int reduct = 1;
 
         // Late move reduction
-        // Only quiet moves (excluding promotions) are reduced
+        // Only quiet jumps are reduced
         if (i > 3 || move.score == 0)
             reduct += 2;
 
-        int score = -alphabeta(copy, settings, childPV, end, depth - reduct, -beta, -alpha);
+        // PV Search
+        const bool no_captures = (move.type == DOUBLE && move.score <= 2) || 
+                                 (move.type == SINGLE && move.score <= 3);
 
-        if (score > alpha && reduct > 1)
+        const int new_alpha = (i != 0 && no_captures) ? -alpha-2 : -beta;
+
+        int score = -alphabeta(copy, settings, childPV, end, depth - reduct, new_alpha, -alpha);
+
+        if (score > bestScore && (reduct > 1 || new_alpha != -beta))
             score = -alphabeta(copy, settings, childPV, end, depth - 1, -beta, -alpha);
 
         if (score > bestScore) {
@@ -266,12 +270,12 @@ int qsearch(const Board &board, const Move &last_move, const int depth, int alph
     if (standPat >= beta)
         return beta;
 
-    if (alpha < standPat)
-        alpha = standPat;
-
     // Delta pruning
     if (standPat + stone_value < alpha)
     	return alpha;
+    
+    if (alpha < standPat)
+        alpha = standPat;
 
     std::vector<Move> moves = board.genCaptures(last_move.to);
 

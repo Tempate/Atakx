@@ -38,3 +38,9 @@ Research when the score is better than the best score
 
 PV Search
 	2737 - 2527 - 46	(14 +- 9)
+
+Razoring in move loop
+	441 - 356 - 13		(37 +- 24)
+
+Remove psqt in move ordering
+	896 - 779 - 25		(24 +- 16)

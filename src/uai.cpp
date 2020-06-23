@@ -163,7 +163,7 @@ Move bestmove(const Board &board, Settings &settings) {
     }
 
     else if (TYPE == ALPHABETA)
-        bestMove = abSearch(board, settings);
+        bestMove = search(board, settings);
 
     return bestMove;
 }

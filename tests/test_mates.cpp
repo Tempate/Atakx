@@ -97,7 +97,7 @@ void test_give_mates_in_two() {
 
 
 bool find_best_move(const Board &board, const Move &best_move, Settings &settings) {
-    const Move ab_move = abSearch(board, settings);
+    const Move ab_move = search(board, settings);
         
     if (ab_move != best_move) {
         board.print();

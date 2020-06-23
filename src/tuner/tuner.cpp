@@ -103,7 +103,7 @@ int Tuner::play(const std::string &opening) {
         Settings settings;
         settings.movetime = movetime;
         
-        const Move move = abSearch(board, settings);
+        const Move move = search(board, settings);
         board.make(move);
 
         if (board.ply > 1000)

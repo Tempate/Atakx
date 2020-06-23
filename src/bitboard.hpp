@@ -136,12 +136,12 @@ public:
         return BitScanner{0}; 
     }
 
-    constexpr inline uint64_t lsbBB() const { 
-        return value & -value; 
+    constexpr inline Bitboard lsbBB() const { 
+        return Bitboard{(uint64_t) value & -value}; 
     }
 
-    constexpr inline uint64_t unsetLSB() { 
-        return value &= value - 1; 
+    constexpr inline void unsetLSB() { 
+        value &= value - 1; 
     }
 };
 

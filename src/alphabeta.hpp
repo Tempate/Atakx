@@ -4,6 +4,6 @@
 #include "board.hpp"
 #include "uai.hpp"
 
-Move abSearch(const Board &board, Settings &settings);
+Move search(const Board &board, Settings &settings);
 
 #endif // #ifndef SEARCH_HPP_

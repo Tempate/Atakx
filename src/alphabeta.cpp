@@ -13,16 +13,18 @@ using namespace std::chrono;
 
 enum { EXACT, LOWER_BOUND, UPPER_BOUND };
 
-int alphabeta(const Board &board, SearchState &state, int depth, int alpha, int beta);
+int alphabeta(const Board &board, std::vector<Move> &pv, int depth, int alpha, int beta);
 
 // int qsearch(const Board &board, const Move &move, const int depth, int alpha, int beta);
 
-void sort(std::vector<Move> &moves, const Board &board);
+void sort(const Board &board, std::vector<Move> &moves);
 void insertion_sort(std::vector<Move> &moves);
 
-void info_string(const SearchState &state, const int depth, const int score, const double elapsed);
+void info_string(const int depth, const int score, const double elapsed);
 
 TimePoint time_management(const Board &board, Settings &settings, TimePoint start);
+
+SearchState state;
 
 
 Move search(const Board &board, Settings &settings) {
@@ -31,7 +33,7 @@ Move search(const Board &board, Settings &settings) {
     const int alpha = -MATE_SCORE;
     const int beta = MATE_SCORE;
 
-    SearchState state;
+    state = SearchState{};
     state.timed = settings.timed;
     state.nodes = 0;
 
@@ -41,11 +43,13 @@ Move search(const Board &board, Settings &settings) {
         state.end = time_management(board, settings, start);
 
     for (int depth = 1; depth <= settings.depth; depth++) {
-        state.previous_pv.insert(state.previous_pv.begin(), state.pv.begin(), state.pv.end());
-        state.pv.clear();
-        state.nodes = 0;
+        state.depth = depth;
 
-        const int score = alphabeta(board, state, depth, alpha, beta);
+        std::vector<Move> pv;
+
+        const int score = alphabeta(board, pv, depth, alpha, beta);
+
+        state.pv = pv;
 
         const TimePoint current = high_resolution_clock::now();
         const double elapsed = duration_cast<milliseconds>(current - start).count();
@@ -53,17 +57,17 @@ Move search(const Board &board, Settings &settings) {
         if (state.stop)
             break;
 
-        best_move = state.pv.front();
+        best_move = pv.front();
 
         #if TUNING == false
-            info_string(state, depth, score, elapsed);
+            info_string(depth, score, elapsed);
         #endif
     }
 
     return best_move;
 }
 
-int alphabeta(const Board &board, SearchState &state, int depth, int alpha, int beta) {
+int alphabeta(const Board &board, std::vector<Move> &pv, int depth, int alpha, int beta) {
     if (state.stop)
         return 0;
 
@@ -180,12 +184,9 @@ int alphabeta(const Board &board, SearchState &state, int depth, int alpha, int 
 
         if (mine == 0)
             return -MATE_SCORE;
-    } else
-        sort(moves, board);
-
-    auto pv = state.pv;
-    SearchState &new_state = state;
-    new_state.pv.clear();
+    } else {
+        sort(board, moves);
+    }
 
     for (int i = 0; i < moves.size(); i++) {
         const Move &move = moves[i];
@@ -225,18 +226,18 @@ int alphabeta(const Board &board, SearchState &state, int depth, int alpha, int 
 
         const int new_alpha = (i != 0 && no_captures) ? -alpha-2 : -beta;
 
-        int score = -alphabeta(copy, new_state, depth - reduct, new_alpha, -alpha);
+        std::vector<Move> child_pv;
+
+        int score = -alphabeta(copy, child_pv, depth - reduct, new_alpha, -alpha);
 
         if (score > best_score && (reduct > 1 || new_alpha != -beta))
-            score = -alphabeta(copy, new_state, depth - 1, -beta, -alpha);
-
-        state.nodes = new_state.nodes;
+            score = -alphabeta(copy, child_pv, depth - 1, -beta, -alpha);
 
         if (score > best_score) {
             best_score = score;
 
             pv.assign(1, move);
-            pv.insert(pv.begin() + 1, new_state.pv.begin(), new_state.pv.end());
+            pv.insert(pv.begin() + 1, child_pv.begin(), child_pv.end());
 
             if (best_score > alpha) {
                 alpha = best_score;
@@ -263,12 +264,10 @@ int alphabeta(const Board &board, SearchState &state, int depth, int alpha, int 
     else
         flag = EXACT;
 
-    state.pv.insert(state.pv.begin(), pv.begin(), pv.end());
-
-    assert(state.pv.size() > 0);
+    assert(pv.size() > 0);
 
     // Always replace the current entry
-    tt.save_entry(Entry{board.key, state.pv[0], depth, best_score, flag});
+    tt.save_entry(Entry{board.key, pv[0], depth, best_score, flag});
 
     return best_score;
 }
@@ -321,7 +320,7 @@ int qsearch(const Board &board, const Move &last_move, const int depth, int alph
 }
 */
 
-void sort(std::vector<Move> &moves, const Board &board) {
+void sort(const Board &board, std::vector<Move> &moves) {
     static const std::array<int, FILES * RANKS> psqt = {
         1, 1, 1, 1, 1, 1, 1,
         1, 0, 0, 0, 0, 0, 1,
@@ -337,13 +336,12 @@ void sort(std::vector<Move> &moves, const Board &board) {
     for (Move &move : moves) {
         if (entry.key == board.key && move == entry.move) {
             move.score = 1000;
-            continue;
+        } else {
+            move.score = board.countCaptures(move);
+
+            if (move.type == SINGLE)
+                move.score += 3;
         }
-
-        move.score = board.countCaptures(move);
-
-        if (move.type == SINGLE)
-            move.score += 3;
     }
 
     insertion_sort(moves);
@@ -387,7 +385,7 @@ TimePoint time_management(const Board &board, Settings &settings, TimePoint star
     return start + movetime;
 }
 
-void info_string(const SearchState &state, const int depth, const int score, const double elapsed) {
+void info_string(const int depth, const int score, const double elapsed) {
     std::cout << "info depth " << depth << " score " << score << " nodes " << state.nodes << " time " << elapsed;
 
     if (elapsed > 0) {

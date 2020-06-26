@@ -10,9 +10,9 @@ Move search(const Board &board, Settings &settings);
 
 struct SearchState {
     std::vector<Move> pv;
-    std::vector<Move> previous_pv;
 
     uint64_t nodes = 0;
+    int depth;
 
     bool stop = false;
     int timed;

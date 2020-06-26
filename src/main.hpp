@@ -24,10 +24,4 @@ enum { RANDOM_PLAYER, MOST_CAPTURES, ALPHABETA };
 
 enum { BLACK, WHITE };
 
-struct Stats {
-    int ttHits;
-
-    Stats() : ttHits(0) {}
-};
-
 #endif // #ifndef MAIN_HPP_

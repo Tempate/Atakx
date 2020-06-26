@@ -23,7 +23,7 @@ void uai() {
     std::string cmd;
     std::string msg;
 
-    while (1) {
+    while (true) {
         getline(std::cin, msg);
 
         if (msg.compare("uai") == 0) {
@@ -34,7 +34,7 @@ void uai() {
         }
     }
 
-    while (1) {
+    while (true) {
         getline(std::cin, msg);
         std::stringstream ss(msg);
         ss >> cmd;

@@ -9,10 +9,7 @@
 #define MAX_DEPTH 50
 
 struct Settings {
-    bool stop;
-
     int depth;
-    uint64_t nodes;
 
     int wtime;
     int btime;
@@ -23,10 +20,7 @@ struct Settings {
     bool timed;
 
     void init() {
-        stop = false;
-
         depth = MAX_DEPTH;
-        nodes = 0;
 
         wtime = 0;
         btime = 0;

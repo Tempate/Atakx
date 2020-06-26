@@ -44,3 +44,9 @@ Razoring in move loop
 
 Remove psqt in move ordering
 	896 - 779 - 25		(24 +- 16)
+
+Jumping penalty for hole size
+	757 - 623 - 20		(33 +- 18)
+
+Hole sealing bonus for single moves
+	575 - 474 - 11		(33 +- 21)

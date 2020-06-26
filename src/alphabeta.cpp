@@ -321,15 +321,9 @@ int qsearch(const Board &board, const Move &last_move, const int depth, int alph
 */
 
 void sort(const Board &board, std::vector<Move> &moves) {
-    static const std::array<int, FILES * RANKS> psqt = {
-        1, 1, 1, 1, 1, 1, 1,
-        1, 0, 0, 0, 0, 0, 1,
-        1, 0, 0, 0, 0, 0, 1,
-        1, 0, 0, 0, 0, 0, 1,
-        1, 0, 0, 0, 0, 0, 1,
-        1, 0, 0, 0, 0, 0, 1,
-        1, 1, 1, 1, 1, 1, 1,
-    };
+    static const std::array<int, 9> jumping_penalties = {0, 0, 0, 1, 2, 2, 3, 3, 4};
+    static const std::array<int, 9> hole_sealing_bonuses = {0, 0, 0, 1, 1, 2, 2, 3, 3};
+    static const int SINGLE_MOVE_BONUS = 2;
 
     const Entry entry = tt.get_entry(board.key);
 
@@ -339,8 +333,19 @@ void sort(const Board &board, std::vector<Move> &moves) {
         } else {
             move.score = board.countCaptures(move);
 
-            if (move.type == SINGLE)
-                move.score += 3;
+            const int hole_size = (singlesLookup[move.from] & board.stones[board.turn]).popCount();
+
+            switch (move.type) {
+                case SINGLE:
+                    move.score += SINGLE_MOVE_BONUS + hole_sealing_bonuses[hole_size];
+
+                    break;
+                case DOUBLE:
+                    if (neighboursLookup[move.from] & board.stones[board.turn ^ 1])
+                        move.score -= jumping_penalties[hole_size];
+
+                    break;
+            }
         }
     }
 

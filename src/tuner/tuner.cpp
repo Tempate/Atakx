@@ -1,6 +1,7 @@
 #include "../main.hpp"
-#include "../alphabeta.hpp"
 #include "../uai.hpp"
+
+#include "../alphabeta/search.hpp"
 
 #include "population.hpp"
 #include "player.hpp"
@@ -103,7 +104,7 @@ int Tuner::play(const std::string &opening) {
         Settings settings;
         settings.movetime = movetime;
         
-        const Move move = search(board, settings);
+        const Move move = alphabeta::search(board, settings);
         board.make(move);
 
         if (board.ply > 1000)

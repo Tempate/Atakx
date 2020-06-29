@@ -1,7 +1,9 @@
 #include "../src/board.hpp"
 #include "../src/moves.hpp"
-#include "../src/alphabeta.hpp"
 #include "../src/uai.hpp"
+
+#include "../src/alphabeta/search.hpp"
+
 #include "main.hpp"
 
 #include <vector>
@@ -22,7 +24,7 @@ void test_mates() {
 void test_give_mates_in_one() {
     Settings settings;
     settings.init();
-    settings.depth = 7;
+    settings.depth = 10;
     settings.timed = false;
 
     std::vector<std::pair<Board, Move>> mates = {
@@ -50,7 +52,7 @@ void test_give_mates_in_one() {
 void test_avoid_mates_in_one() {
     Settings settings;
     settings.init();
-    settings.depth = 7;
+    settings.depth = 10;
     settings.timed = false;
 
     std::vector<std::pair<Board, Move>> mates = {
@@ -76,7 +78,7 @@ void test_avoid_mates_in_one() {
 void test_give_mates_in_two() {
     Settings settings;
     settings.init();
-    settings.depth = 7;
+    settings.depth = 10;
     settings.timed = false;
 
     std::vector<std::pair<Board, Move>> mates = {
@@ -97,7 +99,7 @@ void test_give_mates_in_two() {
 
 
 bool find_best_move(const Board &board, const Move &best_move, Settings &settings) {
-    const Move ab_move = search(board, settings);
+    const Move ab_move = alphabeta::search(board, settings);
         
     if (ab_move != best_move) {
         board.print();

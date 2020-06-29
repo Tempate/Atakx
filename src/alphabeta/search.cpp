@@ -1,31 +1,21 @@
 #include <algorithm>
 #include <limits>
 
-#include "board.hpp"
-#include "lookup.hpp"
-#include "hashtables.hpp"
-#include "moves.hpp"
-#include "uai.hpp"
-#include "eval.hpp"
-#include "alphabeta.hpp"
+#include "../board.hpp"
+#include "../lookup.hpp"
+#include "../hashtables.hpp"
+#include "../moves.hpp"
+#include "../uai.hpp"
+#include "../eval.hpp"
 
-using namespace std::chrono;
+#include "sort.hpp"
+#include "search.hpp"
 
 enum { EXACT, LOWER_BOUND, UPPER_BOUND };
 
-int alphabeta(const Board &board, std::vector<Move> &pv, int depth, int alpha, int beta);
-
-// int qsearch(const Board &board, const Move &move, const int depth, int alpha, int beta);
-
-void sort(const Board &board, std::vector<Move> &moves);
-void insertion_sort(std::vector<Move> &moves);
-
-void info_string(const int depth, const int score, const double elapsed);
-
-TimePoint time_management(const Board &board, Settings &settings, TimePoint start);
-
 SearchState state;
 
+namespace alphabeta {
 
 Move search(const Board &board, Settings &settings) {
     Move best_move;
@@ -37,7 +27,7 @@ Move search(const Board &board, Settings &settings) {
     state.timed = settings.timed;
     state.nodes = 0;
 
-    const TimePoint start = high_resolution_clock::now();
+    const TimePoint start = std::chrono::high_resolution_clock::now();
     
     if (settings.timed)
         state.end = time_management(board, settings, start);
@@ -47,12 +37,12 @@ Move search(const Board &board, Settings &settings) {
 
         std::vector<Move> pv;
 
-        const int score = alphabeta(board, pv, depth, alpha, beta);
+        const int score = pv_search(board, pv, depth, alpha, beta);
 
         state.pv = pv;
 
-        const TimePoint current = high_resolution_clock::now();
-        const double elapsed = duration_cast<milliseconds>(current - start).count();
+        const TimePoint current = std::chrono::high_resolution_clock::now();
+        const double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(current - start).count();
 
         if (state.stop)
             break;
@@ -67,11 +57,11 @@ Move search(const Board &board, Settings &settings) {
     return best_move;
 }
 
-int alphabeta(const Board &board, std::vector<Move> &pv, int depth, int alpha, int beta) {
+int pv_search(const Board &board, std::vector<Move> &pv, int depth, int alpha, int beta) {
     if (state.stop)
         return 0;
 
-    if (state.timed && state.nodes % 4096 == 0 && high_resolution_clock::now() > state.end) {
+    if (state.timed && state.nodes % 4096 == 0 && std::chrono::high_resolution_clock::now() > state.end) {
         state.stop = true;
         return 0;
     }
@@ -185,7 +175,7 @@ int alphabeta(const Board &board, std::vector<Move> &pv, int depth, int alpha, i
         if (mine == 0)
             return -MATE_SCORE;
     } else {
-        sort(board, moves);
+        alphabeta::sort(board, moves);
     }
 
     for (int i = 0; i < moves.size(); i++) {
@@ -228,10 +218,10 @@ int alphabeta(const Board &board, std::vector<Move> &pv, int depth, int alpha, i
 
         std::vector<Move> child_pv;
 
-        int score = -alphabeta(copy, child_pv, depth - reduct, new_alpha, -alpha);
+        int score = -pv_search(copy, child_pv, depth - reduct, new_alpha, -alpha);
 
         if (score > best_score && (reduct > 1 || new_alpha != -beta))
-            score = -alphabeta(copy, child_pv, depth - 1, -beta, -alpha);
+            score = -pv_search(copy, child_pv, depth - 1, -beta, -alpha);
 
         if (score > best_score) {
             best_score = score;
@@ -272,107 +262,11 @@ int alphabeta(const Board &board, std::vector<Move> &pv, int depth, int alpha, i
     return best_score;
 }
 
-/*
-int qsearch(const Board &board, const Move &last_move, const int depth, int alpha, int beta) {
-    const int standPat = eval(board);
-
-    if (depth <= 0)
-        return standPat;
-
-    if (standPat >= beta)
-        return beta;
-
-    // Delta pruning
-    if (standPat + stone_value < alpha)
-    	return alpha;
-    
-    if (alpha < standPat)
-        alpha = standPat;
-
-    std::vector<Move> moves = board.genCaptures(last_move.to);
-
-    if (moves.size() == 0)
-        return alpha;
-
-    sort(moves, board);
-
-    for (const Move &move : moves) {
-        if (!(singlesLookup[last_move.to] & Bitboard{move.to}))
-            continue;
-
-        if (move.score <= 8)
-            break;
-
-        Board copy = board;
-        copy.key = tt.update_key(copy, move);
-        copy.make(move);
-
-        const int score = -qsearch(copy, move, depth - 1, -beta, -alpha);
-
-        if (score >= beta)
-            return beta;
-
-        if (score > alpha)
-            alpha = score;
-    }
-
-    return score;
-}
-*/
-
-void sort(const Board &board, std::vector<Move> &moves) {
-    static const std::array<int, 9> jumping_penalties = {0, 0, 0, 1, 2, 2, 3, 3, 4};
-    static const std::array<int, 9> hole_sealing_bonuses = {0, 0, 0, 1, 1, 2, 2, 3, 3};
-    static const int SINGLE_MOVE_BONUS = 2;
-
-    const Entry entry = tt.get_entry(board.key);
-
-    for (Move &move : moves) {
-        if (entry.key == board.key && move == entry.move) {
-            move.score = 1000;
-        } else {
-            move.score = board.countCaptures(move);
-
-            const int hole_size = (singlesLookup[move.from] & board.stones[board.turn]).popCount();
-
-            switch (move.type) {
-                case SINGLE:
-                    move.score += SINGLE_MOVE_BONUS + hole_sealing_bonuses[hole_size];
-
-                    break;
-                case DOUBLE:
-                    if (neighboursLookup[move.from] & board.stones[board.turn ^ 1])
-                        move.score -= jumping_penalties[hole_size];
-
-                    break;
-            }
-        }
-    }
-
-    insertion_sort(moves);
-}
-
-void insertion_sort(std::vector<Move> &moves) {
-    assert(moves.size() > 0);
-
-    for (int i = 1; i < moves.size(); ++i) {
-        const Move move = moves[i];
-        int j = i - 1;
-
-        while (j >= 0 && moves[j].score < move.score) {
-            moves[j + 1] = moves[j];
-            --j;
-        }
-
-        moves[j + 1] = move;
-    }
-}
-
 TimePoint time_management(const Board &board, Settings &settings, TimePoint start) {
-    high_resolution_clock::duration movetime = milliseconds(0);
+    std::chrono::high_resolution_clock::duration movetime = std::chrono::milliseconds(0);
 
     if (settings.movetime)
-        return start + milliseconds(settings.movetime);
+        return start + std::chrono::milliseconds(settings.movetime);
 
     clock_t remaining, increment;
 
@@ -385,7 +279,7 @@ TimePoint time_management(const Board &board, Settings &settings, TimePoint star
     }
 
     if (remaining || increment)
-        movetime = milliseconds(std::min(remaining >> 2, (remaining >> 5) + increment));
+        movetime = std::chrono::milliseconds(std::min(remaining >> 2, (remaining >> 5) + increment));
 
     return start + movetime;
 }
@@ -406,4 +300,6 @@ void info_string(const int depth, const int score, const double elapsed) {
         std::cout << " " << move;
 
     std::cout << std::endl;
+}
+
 }

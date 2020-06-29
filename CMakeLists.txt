@@ -28,8 +28,11 @@ add_executable(
     src/lookup.cpp
     src/hashtables.cpp
     src/moves.cpp
-    src/alphabeta.cpp
     src/eval.cpp
+    src/sort.cpp
+
+    src/alphabeta/search.cpp
+    src/alphabeta/sort.cpp
     
     src/tuner/tuner.cpp
     src/tuner/population.cpp
@@ -44,9 +47,12 @@ add_executable(
     src/board.cpp
     src/hashtables.cpp
     src/moves.cpp
-    src/alphabeta.cpp
+    src/sort.cpp
     src/eval.cpp
     src/uai.cpp
+
+    src/alphabeta/search.cpp
+    src/alphabeta/sort.cpp
     
     src/tuner/tuner.cpp
     src/tuner/population.cpp

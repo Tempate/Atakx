@@ -4,7 +4,7 @@
 #include "main.hpp"
 #include "board.hpp"
 #include "hashtables.hpp"
-#include "alphabeta.hpp"
+#include "alphabeta/search.hpp"
 
 #include "uai.hpp"
 
@@ -163,7 +163,7 @@ Move bestmove(const Board &board, Settings &settings) {
     }
 
     else if (TYPE == ALPHABETA)
-        bestMove = search(board, settings);
+        bestMove = alphabeta::search(board, settings);
 
     return bestMove;
 }

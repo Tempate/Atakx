@@ -4,7 +4,7 @@
 #include "../board.hpp"
 #include "../uai.hpp"
 
-using TimePoint = std::chrono::high_resolution_clock::time_point;
+using TimePoint = std::chrono::steady_clock::time_point;
 
 struct SearchState {
     std::vector<Move> pv;

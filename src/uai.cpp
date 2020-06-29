@@ -117,14 +117,12 @@ void go(Board &board, const std::string &s) {
 }
 
 void perft(const Board &board, const int depth) {
-    using namespace std::chrono;
-
     for (int d = 1; d <= depth; ++d) {
-        const auto start = high_resolution_clock::now();
+        const auto start = std::chrono::steady_clock::now();
         const uint64_t nodes = board.perft(d);
-        const auto end = high_resolution_clock::now();
+        const auto end = std::chrono::steady_clock::now();
 
-        const auto elapsed = duration_cast<milliseconds>(end - start).count();
+        const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
         std::cout << "info depth " << d << " nodes " << nodes << " time "
                   << elapsed << "ms";

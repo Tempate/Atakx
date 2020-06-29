@@ -27,7 +27,7 @@ Move search(const Board &board, Settings &settings) {
     state.timed = settings.timed;
     state.nodes = 0;
 
-    const TimePoint start = std::chrono::high_resolution_clock::now();
+    const TimePoint start = std::chrono::steady_clock::now();
     
     if (settings.timed)
         state.end = time_management(board, settings, start);
@@ -41,7 +41,7 @@ Move search(const Board &board, Settings &settings) {
 
         state.pv = pv;
 
-        const TimePoint current = std::chrono::high_resolution_clock::now();
+        const TimePoint current = std::chrono::steady_clock::now();
         const double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(current - start).count();
 
         if (state.stop)
@@ -61,7 +61,7 @@ int pv_search(const Board &board, std::vector<Move> &pv, int depth, int alpha, i
     if (state.stop)
         return 0;
 
-    if (state.timed && state.nodes % 4096 == 0 && std::chrono::high_resolution_clock::now() > state.end) {
+    if (state.timed && state.nodes % 4096 == 0 && std::chrono::steady_clock::now() > state.end) {
         state.stop = true;
         return 0;
     }
@@ -263,7 +263,7 @@ int pv_search(const Board &board, std::vector<Move> &pv, int depth, int alpha, i
 }
 
 TimePoint time_management(const Board &board, Settings &settings, TimePoint start) {
-    std::chrono::high_resolution_clock::duration movetime = std::chrono::milliseconds(0);
+    std::chrono::steady_clock::duration movetime = std::chrono::milliseconds(0);
 
     if (settings.movetime)
         return start + std::chrono::milliseconds(settings.movetime);

@@ -11,6 +11,8 @@
 #include "sort.hpp"
 #include "search.hpp"
 
+#include "../mcts/rollouts.hpp"
+
 enum { EXACT, LOWER_BOUND, UPPER_BOUND };
 
 SearchState state;
@@ -182,15 +184,13 @@ int pv_search(const Board &board, std::vector<Move> &pv, int depth, int alpha, i
         const Move &move = moves[i];
 
         // Razoring
-        if (depth == 1 && i > 3 && static_eval + move.score * stone_value < alpha)
+        if (depth == 1 && i > 3 && static_eval + move.score < alpha)
             break;
 
         // Late move pruning
 		// Skip quiet moves on low depths
-		if (((depth <= 2 && move.score <= 2) || (depth <= 6 && move.score <= 1)) && 
-            best_score > std::numeric_limits<int>::min())
+		if (i > 0 && ((depth <= 2 && move.score <= 200) || (depth <= 6 && move.score <= 100)))
             break;
-
 
         Board copy = board;
         copy.key = tt.update_key(copy, move);
@@ -200,21 +200,13 @@ int pv_search(const Board &board, std::vector<Move> &pv, int depth, int alpha, i
 
         // Late move reduction
         // Only quiet jumps are reduced
-        if (i > 3 || move.score == 0)
+        if (i >= 2 || move.score == 0)
             reduct += 2;
 
-        // Extensions
-        //const bool many_captures = (move.type == SINGLE && move.score >= 8) || 
-        //                           (move.type == DOUBLE && move.score >= 7);
-
-        //if (move.type == DOUBLE && move.score == 3)
-        //    reduct -= 1;
-
         // PV Search
-        const bool no_captures = (move.type == SINGLE && move.score <= 3) ||
-                                 (move.type == DOUBLE && move.score <= 2);
+        const bool no_captures = move.score <= 200;
 
-        const int new_alpha = (i != 0 && no_captures) ? -alpha-2 : -beta;
+        const int new_alpha = (i > 0 && no_captures) ? -alpha-2 : -beta;
 
         std::vector<Move> child_pv;
 

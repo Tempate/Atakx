@@ -33,6 +33,8 @@ add_executable(
 
     src/alphabeta/search.cpp
     src/alphabeta/sort.cpp
+
+    src/mcts/rollouts.cpp
     
     src/tuner/tuner.cpp
     src/tuner/population.cpp
@@ -53,6 +55,8 @@ add_executable(
 
     src/alphabeta/search.cpp
     src/alphabeta/sort.cpp
+
+    src/mcts/rollouts.cpp
     
     src/tuner/tuner.cpp
     src/tuner/population.cpp

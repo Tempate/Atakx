@@ -188,7 +188,7 @@ std::vector<Move> Board::genMoves() const {
     std::vector<Move> moves;
     moves.reserve(32);
 
-    Bitboard bb = stones[turn];
+    const Bitboard bb = stones[turn];
     Bitboard sMoves;
 
     for (int sqr : bb) {
@@ -211,6 +211,19 @@ std::vector<Move> Board::genMoves() const {
 
     return moves;
 }
+
+std::vector<Move> Board::genSingleMoves() const {
+    std::vector<Move> moves;
+    moves.reserve(16);
+
+    const Bitboard sMoves = stones[turn].singles() & empty;
+
+    for (int to : sMoves)
+        moves.emplace_back(to);
+
+    return moves;
+}
+
 
 bool Board::isMoveLegal(const Move &move) const {
     const Bitboard free_destination = empty & Bitboard{move.to};
@@ -346,44 +359,48 @@ void Board::playSequence(const std::string &movesString) {
     }
 }
 
-// Returns the state of the game:
-//      1   won
-//      0.5 draw
-//      0   lost
+// Returns the state of the game: LOST, DRAWN, WON, or UNFINISHED
 
 // When adjudication is on, it'll consider a 
-// win those games where the tile difference 
+// win games in which the tile difference 
 // is greater than the blank tiles.
-
-// In any other case it returns NOT_FINISHED
 float Board::state(const bool adjudicate) const {
     if (!stones[turn])
-        return 0;
+        return LOST;
     
     if (!stones[turn ^ 1])
-        return 1;
+        return WON;
 
     if (adjudicate == false) {
         if (empty)
-            return NOT_FINISHED;
+            return UNFINISHED;
 
-        const int a = stones[turn].popCount();
-        const int b = stones[turn ^ 1].popCount();
+        const int mine = stones[turn].popCount();
+        const int other = stones[turn ^ 1].popCount();
+
+        if (mine > other)
+            return WON;
         
-        return (a > b) ? 1 : 0;
+        if (other > mine)
+            return LOST;
+        
+        return DRAWN;
     }
 
-    const int a = stones[turn].popCount();
-    const int b = stones[turn ^ 1].popCount();
-    const int c = empty.popCount();
+    const int mine = stones[turn].popCount();
+    const int other = stones[turn ^ 1].popCount();
+    const int free = empty.popCount();
     
-    if (a - c > b)
-        return 1;
+    if (mine - free > other)
+        return WON;
     
-    if (b - c > a)
-        return 0;
+    if (other - free > mine)
+        return LOST;
 
-    return NOT_FINISHED;
+    if (other == mine && free == 0)
+        return DRAWN;
+
+    return UNFINISHED;
 }
 
 uint64_t Board::perft(int depth) const {

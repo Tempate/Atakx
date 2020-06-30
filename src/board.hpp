@@ -9,9 +9,10 @@
 #include "bitboard.hpp"
 #include "moves.hpp"
 
-#define NOT_FINISHED 100
-
 enum {MAKE, UNDO};
+
+enum {LOST, WON, UNFINISHED};
+#define DRAWN 0.5
 
 class Board {
 public:
@@ -37,6 +38,7 @@ public:
     std::string toFen() const;
 
     std::vector<Move> genMoves() const;
+    std::vector<Move> genSingleMoves() const;
     int countMoves() const;
 
     std::vector<Move> genCaptures(const int sqr) const;

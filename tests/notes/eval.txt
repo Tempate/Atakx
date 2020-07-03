@@ -36,3 +36,6 @@ Only consider safety in endgames
 
 Bonus for friendly pieces nearby
     225 - 171 - 4       (47 +- 34)
+
+Polarize material scores
+    455 - 370 - 15      (35 +- 23)

@@ -7,17 +7,34 @@
 int psqt_score(const Board &board, const int side);
 int holes_score(const Board &board, const int side);
 int safety_score(const Board &board, const int side);
+//int density_score(const Board &board);
+
+//std::vector<Bitboard> gen_regions(const int size);
+
 
 const int stone_value = 100;
 
 int eval(const Board &board) {
+    int score = 0;
+
     const int material = board.stones[board.turn].popCount() - board.stones[board.turn ^ 1].popCount();
 
-    const int psqt = psqt_score(board, board.turn) - psqt_score(board, board.turn ^ 1);
-    const int holes = holes_score(board, board.turn) - holes_score(board, board.turn ^ 1);
-    const int safety = safety_score(board, board.turn) - safety_score(board, board.turn ^ 1);
+    score += material;
+    score += 10 * board.turn;
+    score *= stone_value;
+    
+    score += psqt_score(board, board.turn) - psqt_score(board, board.turn ^ 1);
+    score += holes_score(board, board.turn) - holes_score(board, board.turn ^ 1);
+    score += safety_score(board, board.turn) - safety_score(board, board.turn ^ 1);
 
-    return stone_value * (material + 10 * board.turn) + psqt + holes + safety;
+    const int deviation = 75;
+
+    if (material > 0)
+        score += deviation;
+    else if (material < 0)
+        score -= deviation;
+
+    return score;
 }
 
 int psqt_score(const Board &board, const int side) {
@@ -73,6 +90,57 @@ int safety_score(const Board &board, const int side) {
     return weaknesses * penalty + safeties * bonus;
 }
 
+/*
+std::vector<Bitboard> gen_regions(const int size) {
+    static const std::array<Bitboard, 7> bases = {
+        Bitboard{(uint64_t) 0b1000000000000000000000000000000000000000000000000},
+        Bitboard{(uint64_t) 0b1100000110000000000000000000000000000000000000000},
+        Bitboard{(uint64_t) 0b1110000111000011100000000000000000000000000000000},
+        Bitboard{(uint64_t) 0b1111000111100011110001111000000000000000000000000},
+        Bitboard{(uint64_t) 0b1111100111110011111001111100111110000000000000000},
+        Bitboard{(uint64_t) 0b1111110111111011111101111110111111011111100000000},
+        Bitboard{(uint64_t) 0b1111111111111111111111111111111111111111111111111}
+    };
+
+    const int repetitions = 8 - size;
+    const int count = repetitions * repetitions;
+
+    std::vector<Bitboard> regions;
+    regions.reserve(count);
+    regions.assign(1, bases[size - 1]);
+
+    for (int i = 0; i < count; i++) {
+        const int shift = 1 + static_cast<int>(i % 7 == repetitions);
+        regions.push_back(regions[i] << shift);
+    }
+
+    return regions;
+}
+
+int density_score(const Board &board) {
+    static const std::vector<Bitboard> regions = {
+        Bitboard{(uint64_t) 0b1110000111000011100000000000000000000000000000000},
+        Bitboard{(uint64_t) 0b0000111000011100001110000000000000000000000000000},
+        Bitboard{(uint64_t) 0b0000000000000000000000000000000011100001110000111},
+        Bitboard{(uint64_t) 0b0000000000000000000000000000111000011100001110000}
+    };
+
+    int score = 0;
+
+    for (const Bitboard &region : regions) {
+        const int mine = (board.stones[board.turn] & region).popCount();
+        const int other = (board.stones[board.turn ^ 1] & region).popCount();
+        const int empty = mine - other;
+
+        if (mine > other)
+            score += -10;
+        else if (mine < other)
+            score -= -10;        
+    }
+
+    return score;
+}
+
 int index_singles(const Board &board, const int sqr) {
     assert(sqr % 7 > 0 && sqr % 7 < 6);
     assert(sqr / 7 > 0 && sqr / 7 < 6);
@@ -101,4 +169,5 @@ int index_singles(const Board &board, const int sqr) {
     }
 
     return index;
-} 
+}
+*/

@@ -77,52 +77,29 @@ int pv_search(const Board &board, std::vector<Move> &pv, int depth, int alpha, i
         return eval(board);
 
     // Transposition Table
-    /*
     const Entry entry = tt.get_entry(board.key);
     const bool tt_hit = entry.key == board.key;
-    */
-    int static_eval = eval(board);
-    const int pvNode = beta - alpha > 2;
+    const int pv_node = beta - alpha > 2;
+
+    int best_score = std::numeric_limits<int>::min();
 
     assert(board.key != 0);
 
-    /*
     #ifdef DEBUG
         if (tt_hit)
-            stats.ttHits++;
+            state.tt_hits++;
     #endif
-    */
 
-    /*
+   int static_eval;
+
     if (tt_hit && entry.depth >= depth) {
         assert(entry.key != 0);
         assert(entry.depth != 0);
 
-        switch (entry.flag) {
-        case LOWER_BOUND:
-            if (entry.score >= beta) {
-                pv.assign(1, entry.move);
-                return entry.score;
-            }
-
-            break;
-        case UPPER_BOUND:
-            if (entry.score <= alpha) {
-                pv.assign(1, entry.move);
-                return entry.score;
-            }
-
-            break;
-        case EXACT:
-            if (entry.depth == depth) {
-                pv.assign(1, entry.move);
-                return entry.score;
-            }
-
-            break;
-        }
+        static_eval = entry.score;
+    } else {
+        static_eval = eval(board);
     }
-    */
 
     const int delta = 10 * stone_value;
     const int prevAlpha = alpha;
@@ -155,8 +132,6 @@ int pv_search(const Board &board, std::vector<Move> &pv, int depth, int alpha, i
         }
 	}
     */
-
-    int best_score = std::numeric_limits<int>::min();
 
     std::vector<Move> moves = board.genMoves();
     assert(moves.size() > 0);
@@ -204,9 +179,10 @@ int pv_search(const Board &board, std::vector<Move> &pv, int depth, int alpha, i
             reduct += 2;
 
         // PV Search
-        const bool no_captures = move.score <= 200;
+        const bool no_captures = (move.type == SINGLE && move.score <= 300) ||
+                                 (move.type == DOUBLE && move.score <= 200);
 
-        const int new_alpha = (i > 0 && no_captures) ? -alpha-2 : -beta;
+        const int new_alpha = (no_captures) ? -alpha-2 : -beta;
 
         std::vector<Move> child_pv;
 
@@ -224,12 +200,8 @@ int pv_search(const Board &board, std::vector<Move> &pv, int depth, int alpha, i
             if (best_score > alpha) {
                 alpha = best_score;
 
-                if (alpha >= beta) {
-                    //if (board.countCaptures(move) == 0)
-                    //    killerMoves[board.ply] = move;
-
+                if (alpha >= beta)
                     break;
-                }
             }
         }
     }

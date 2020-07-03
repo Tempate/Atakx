@@ -50,3 +50,6 @@ Jumping penalty for hole size
 
 Hole sealing bonus for single moves
 	575 - 474 - 11		(33 +- 21)
+
+Replace static_eval for entry.score
+	5137 - 4740 - 123		(14 +- 7)

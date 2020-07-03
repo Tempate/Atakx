@@ -59,6 +59,7 @@ void TT::clear() {
 
 Entry TT::get_entry(const uint64_t key) const {
     assert(entries.size() > 0);
+    
     return entries[key % entries.size()];
 }
 

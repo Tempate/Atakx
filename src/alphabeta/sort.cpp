@@ -5,8 +5,11 @@
 #include "../sort.hpp"
 #include "../eval.hpp"
 
+#define TT_MOVE std::numeric_limits<int>::max()
 
 namespace alphabeta {
+
+std::array<Move, 1000> killer_moves;
 
 void sort(const Board &board, std::vector<Move> &moves) {
     static const std::array<int, 9> jumping_penalties = {0, 0, 0, 100, 200, 200, 300, 300, 400};
@@ -17,7 +20,7 @@ void sort(const Board &board, std::vector<Move> &moves) {
 
     for (Move &move : moves) {
         if (entry.key == board.key && move == entry.move) {
-            move.score = std::numeric_limits<int>::max();
+            move.score = TT_MOVE;
         } else {
             move.score = board.countCaptures(move) * stone_value;
 

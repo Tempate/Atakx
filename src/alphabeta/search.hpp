@@ -23,10 +23,10 @@ struct SearchState {
 namespace alphabeta {
     Move search(const Board &board, Settings &settings);
 
-    int pv_search(const Board &board, std::vector<Move> &pv, int depth, int alpha, int beta);
+    int pv_search(const Board &board, SearchState &state, std::vector<Move> &pv, int depth, int alpha, int beta);
 
     TimePoint time_management(const Board &board, Settings &settings, TimePoint start);
-    void info_string(const int depth, const int score, const double elapsed);
+void info_string(const SearchState &state, const int depth, const int score, const double elapsed);
 }
 
 #endif // #ifndef SEARCH_HPP_

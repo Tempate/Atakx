@@ -15,7 +15,6 @@
 
 enum { EXACT, LOWER_BOUND, UPPER_BOUND };
 
-SearchState state;
 
 namespace alphabeta {
 
@@ -25,9 +24,10 @@ Move search(const Board &board, Settings &settings) {
     const int alpha = -MATE_SCORE;
     const int beta = MATE_SCORE;
 
-    state = SearchState{};
+    SearchState state;
     state.timed = settings.timed;
     state.nodes = 0;
+    state.stop = false;
 
     const TimePoint start = std::chrono::steady_clock::now();
     
@@ -39,7 +39,7 @@ Move search(const Board &board, Settings &settings) {
 
         std::vector<Move> pv;
 
-        const int score = pv_search(board, pv, depth, alpha, beta);
+        const int score = pv_search(board, state, pv, depth, alpha, beta);
 
         state.pv = pv;
 
@@ -52,14 +52,14 @@ Move search(const Board &board, Settings &settings) {
         best_move = pv.front();
 
         #if TUNING == false
-            info_string(depth, score, elapsed);
+            info_string(state, depth, score, elapsed);
         #endif
     }
 
     return best_move;
 }
 
-int pv_search(const Board &board, std::vector<Move> &pv, int depth, int alpha, int beta) {
+int pv_search(const Board &board, SearchState &state, std::vector<Move> &pv, int depth, int alpha, int beta) {
     if (state.stop)
         return 0;
 
@@ -182,14 +182,18 @@ int pv_search(const Board &board, std::vector<Move> &pv, int depth, int alpha, i
         const bool no_captures = (move.type == SINGLE && move.score <= 300) ||
                                  (move.type == DOUBLE && move.score <= 200);
 
-        const int new_alpha = (no_captures) ? -alpha-2 : -beta;
+        int new_alpha = -beta;
+
+        if ((move.type == SINGLE && move.score <= 300) ||
+            (move.type == DOUBLE && move.score <= 200))
+            new_alpha = -alpha - 2;
 
         std::vector<Move> child_pv;
 
-        int score = -pv_search(copy, child_pv, depth - reduct, new_alpha, -alpha);
+        int score = -pv_search(copy, state, child_pv, depth - reduct, new_alpha, -alpha);
 
         if (score > best_score && (reduct > 1 || new_alpha != -beta))
-            score = -pv_search(copy, child_pv, depth - 1, -beta, -alpha);
+            score = -pv_search(copy, state, child_pv, depth - 1, -beta, -alpha);
 
         if (score > best_score) {
             best_score = score;
@@ -248,7 +252,7 @@ TimePoint time_management(const Board &board, Settings &settings, TimePoint star
     return start + movetime;
 }
 
-void info_string(const int depth, const int score, const double elapsed) {
+void info_string(const SearchState &state, const int depth, const int score, const double elapsed) {
     std::cout << "info depth " << depth << " score " << score << " nodes " << state.nodes << " time " << elapsed;
 
     if (elapsed > 0) {

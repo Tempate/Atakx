@@ -39,3 +39,15 @@ Bonus for friendly pieces nearby
 
 Polarize material scores
     455 - 370 - 15      (35 +- 23)
+
+Reduced komi from 10 to 7
+    413 - 325 - 12      (41 +- 25)
+
+Pocket score
+    462 - 362 - 6       (42 +- 24)
+
+Bonus for stones near corner pockets
+    820 - 685 - 15      (31 +- 17)
+
+Penalty for center pockets
+    897 - 745 - 18      (32 +- 17)

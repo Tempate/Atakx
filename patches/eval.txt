@@ -51,3 +51,6 @@ Bonus for stones near corner pockets
 
 Penalty for center pockets
     897 - 745 - 18      (32 +- 17)
+
+Remove polarization of the score
+    958 - 837 - 25      (23 +- 16)

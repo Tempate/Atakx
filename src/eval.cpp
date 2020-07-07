@@ -30,13 +30,6 @@ int eval(const Board &board) {
     score += safety_score(board, board.turn) - safety_score(board, board.turn ^ 1);
     score += pocket_score(board, board.turn) - pocket_score(board, board.turn ^ 1);
 
-    int deviation = 75;
-
-    if (material > 0)
-        score += deviation;
-    else if (material < 0)
-        score -= deviation;
-
     return score;
 }
 

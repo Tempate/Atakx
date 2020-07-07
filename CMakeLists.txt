@@ -29,7 +29,6 @@ add_executable(
     src/hashtables.cpp
     src/moves.cpp
     src/eval.cpp
-    src/sort.cpp
 
     src/alphabeta/search.cpp
     src/alphabeta/sort.cpp
@@ -49,7 +48,6 @@ add_executable(
     src/board.cpp
     src/hashtables.cpp
     src/moves.cpp
-    src/sort.cpp
     src/eval.cpp
     src/uai.cpp
 

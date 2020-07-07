@@ -9,4 +9,6 @@ namespace alphabeta {
     void sort(const Board &board, std::vector<Move> &moves);
 }
 
+void insertion_sort(std::vector<Move> &moves);
+
 #endif // #ifndef SORT_HPP_

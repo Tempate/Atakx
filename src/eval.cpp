@@ -5,9 +5,9 @@
 #include "tuner/tuner.hpp"
 
 int psqt_score(const Board &board, const int side);
+int pocket_score(const Board &board, const int side);
 int holes_score(const Board &board, const int side);
 int safety_score(const Board &board, const int side);
-int pocket_score(const Board &board, const int side);
 
 //int density_score(const Board &board);
 //std::vector<Bitboard> gen_regions(const int size);
@@ -19,16 +19,15 @@ int eval(const Board &board) {
     int score = 0;
 
     const int material = board.stones[board.turn].popCount() - board.stones[board.turn ^ 1].popCount();
-    
     score += material * stone_value;
 
     const int komi = 7 * stone_value;
     score += komi * board.turn;
     
     score += psqt_score(board, board.turn) - psqt_score(board, board.turn ^ 1);
+    score += pocket_score(board, board.turn) - pocket_score(board, board.turn ^ 1);
     score += holes_score(board, board.turn) - holes_score(board, board.turn ^ 1);
     score += safety_score(board, board.turn) - safety_score(board, board.turn ^ 1);
-    score += pocket_score(board, board.turn) - pocket_score(board, board.turn ^ 1);
 
     return score;
 }
@@ -44,12 +43,58 @@ int psqt_score(const Board &board, const int side) {
         {Bitboard{(uint64_t) 0b0111110100000110000011000001100000110000010111110}, 10}
     }};
 
-    const auto psqt = (board.empty.popCount() > 10) ? psqt_normal : psqt_endgame;
+    const auto &psqt = (board.empty.popCount() > 10) ? psqt_normal : psqt_endgame;
 
     int score = 0;
 
     for (const auto &[bb, value] : psqt)
         score += value * (bb & board.stones[side]).popCount();
+
+    return score;
+}
+
+int pocket_score(const Board &board, const int side) {
+    using PocketArray = std::array<Bitboard, 4>;
+
+    static const PocketArray corner_pockets {
+        Bitboard{(uint64_t) 0b1100000110000000000000000000000000000000000000000},
+        Bitboard{(uint64_t) 0b0000011000001100000000000000000000000000000000000},
+        Bitboard{(uint64_t) 0b0000000000000000000000000000000000011000001100000},
+        Bitboard{(uint64_t) 0b0000000000000000000000000000000000000000110000011}
+    };
+    
+    static const PocketArray corner_suburbs {
+        Bitboard{(uint64_t) 0b0010000001000011100000000000000000000000000000000},
+        Bitboard{(uint64_t) 0b0000100000010000001110000000000000000000000000000},
+        Bitboard{(uint64_t) 0b0000000000000000000000000000111000000100000010000},
+        Bitboard{(uint64_t) 0b0000000000000000000000000000000011100001000000100},
+    };
+
+    static const PocketArray center_pockets {
+        Bitboard{(uint64_t) 0b0001000000100000010001111000000000000000000000000},
+        Bitboard{(uint64_t) 0b0001000000100000010000001111000000000000000000000},
+        Bitboard{(uint64_t) 0b0000000000000000000001111000000100000010000001000},
+        Bitboard{(uint64_t) 0b0000000000000000000000001111000100000010000001000},
+    };
+
+    static const int corner_stone_bonus = 10;
+    static const std::array<int, 5> corner_suburb_stone_bonus = {0, 0, 2, 5, 15};
+    
+    static const int center_stone_penalty = -5;
+
+    int score = 0;
+
+    for (int i = 0; i < 4; i++) {
+        const int corner_stones = (board.stones[side] & corner_pockets[i]).popCount();
+        const int corner_suburb_stones = (board.stones[side] & corner_suburbs[i]).popCount();
+
+        score += corner_stones * corner_stone_bonus;
+        score += corner_suburb_stone_bonus[corner_stones] * corner_suburb_stones;
+        
+        const int center_stones = (board.stones[side] & center_pockets[i]).popCount();
+
+        score += center_stones * center_stone_penalty;
+    }
 
     return score;
 }
@@ -75,7 +120,7 @@ int safety_score(const Board &board, const int side) {
     if (board.empty.popCount() < 10)
         return 0;
 
-    const Bitboard singles = board.stones[side].singles();
+    const Bitboard &singles = board.stones[side].singles();
     
     const int weaknesses = (singles & board.empty).popCount();
     const int penalty = -25;
@@ -84,49 +129,6 @@ int safety_score(const Board &board, const int side) {
     const int bonus = 10;
 
     return weaknesses * penalty + safeties * bonus;
-}
-
-int pocket_score(const Board &board, const int side) {
-    using PocketArray = std::array<Bitboard, 4>;
-
-    static const PocketArray corner_pockets {
-        Bitboard{(uint64_t) 0b1100000110000000000000000000000000000000000000000},
-        Bitboard{(uint64_t) 0b0000011000001100000000000000000000000000000000000},
-        Bitboard{(uint64_t) 0b0000000000000000000000000000000000011000001100000},
-        Bitboard{(uint64_t) 0b0000000000000000000000000000000000000000110000011}
-    };
-    
-    static const PocketArray corner_suburbs {
-        Bitboard{(uint64_t) 0b0010000001000011100000000000000000000000000000000},
-        Bitboard{(uint64_t) 0b0000100000010000001110000000000000000000000000000},
-        Bitboard{(uint64_t) 0b0000000000000000000000000000111000000100000010000},
-        Bitboard{(uint64_t) 0b0000000000000000000000000000000011100001000000100},
-    };
-
-    static const PocketArray center_pockets {
-        Bitboard{(uint64_t) 0b0000000000000000000000001100000110000000000000000},
-        Bitboard{(uint64_t) 0b0000000000000000011000001100000000000000000000000},
-        Bitboard{(uint64_t) 0b0000000000000000000000011000001100000000000000000},
-        Bitboard{(uint64_t) 0b0000000000000000110000011000000000000000000000000}
-    };
-
-    static const int corner_stone_bonus = 10;
-    static const std::array<int, 5> corner_suburb_stone_bonus = {0, 0, 2, 5, 15};
-    static const int center_stone_penalty = -5;
-
-    int score = 0;
-
-    for (int i = 0; i < 4; i++) {
-        const int corner_stones = (board.stones[side] & corner_pockets[i]).popCount();
-        const int suburb_stones = (board.stones[side] & corner_suburbs[i]).popCount();
-        const int center_stones = (board.stones[side] & center_pockets[i]).popCount();
-
-        score += corner_stones * corner_stone_bonus;
-        score += corner_suburb_stone_bonus[corner_stones] * suburb_stones;
-        score += center_stones * center_stone_penalty;
-    }
-
-    return score;
 }
 
 /*

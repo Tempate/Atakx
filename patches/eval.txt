@@ -54,3 +54,6 @@ Penalty for center pockets
 
 Remove polarization of the score
     958 - 837 - 25      (23 +- 16)
+
+Penalty for central stones
+    1826 - 1677 - 37    (15 +- 11)

@@ -174,18 +174,17 @@ int pv_search(const Board &board, SearchState &state, std::vector<Move> &pv, int
         int reduct = 1;
 
         // Late move reduction
-        // Only quiet jumps are reduced
-        if (i >= 2 || move.score == 0)
+        if (i >= 2 && move.score <= 0)
+            reduct += 4;
+        else if (i >= 2 || move.score <= 0)
             reduct += 2;
-
+        
         // PV Search
-        const bool no_captures = (move.type == SINGLE && move.score <= 300) ||
-                                 (move.type == DOUBLE && move.score <= 200);
-
         int new_alpha = -beta;
 
-        if ((move.type == SINGLE && move.score <= 300) ||
-            (move.type == DOUBLE && move.score <= 200))
+        // (move.type == SINGLE && move.captures == 0) ||
+        // (move.type == DOUBLE && move.captures <= 2)
+        if (move.score <= 200)
             new_alpha = -alpha - 2;
 
         std::vector<Move> child_pv;

@@ -1,7 +1,7 @@
 Search tests
 
 Move ordering based on the number of captures
-	529 - 471 - 0
+	529 - 471 - 0	(20 +- 22)
 
 Move ordering adding an extra bonus for single moves
 	280 - 220 - 0	(40 +- 30)
@@ -53,3 +53,9 @@ Hole sealing bonus for single moves
 
 Replace static_eval for entry.score
 	5137 - 4740 - 123	(14 +- 7)
+
+Polarize scores in move ordering
+	2664 - 2470 - 66	(13 +- 9)
+
+Extra reduction when the move is not at the beginning and has a bad score
+	321 - 231 - 8		(56 +- 29)

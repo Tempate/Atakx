@@ -6,7 +6,7 @@
 #include "main.hpp"
 #include "bitboard.hpp"
 
-enum { NULL_MOVE, SINGLE, DOUBLE };
+enum { SINGLE, DOUBLE, NULL_MOVE };
 
 struct Move {
     int from;
@@ -14,6 +14,7 @@ struct Move {
 
     int type;
     int score;
+    int captures;
 
     Move() : type(NULL_MOVE) {}
 
@@ -30,15 +31,15 @@ struct Move {
     constexpr bool operator==(const Move &move) const {
         if (type == SINGLE)
             return to == move.to;
-        else
-            return from == move.from && to == move.to;
+        
+        return from == move.from && to == move.to;
     }
 
     constexpr bool operator!=(const Move &move) const {
         if (type == SINGLE)
             return to != move.to;
-        else
-            return !(from == move.from && to == move.to);
+        
+        return !(from == move.from && to == move.to);
     }
 
     private:

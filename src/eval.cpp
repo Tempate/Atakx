@@ -9,18 +9,21 @@ int pocket_score(const Board &board, const int side);
 int holes_score(const Board &board, const int side);
 int safety_score(const Board &board, const int side);
 
-//int density_score(const Board &board);
-//std::vector<Bitboard> gen_regions(const int size);
-
 
 const int stone_value = 100;
 
 int eval(const Board &board) {
+
     int score = 0;
 
     const int material = board.stones[board.turn].popCount() - board.stones[board.turn ^ 1].popCount();
     score += material * stone_value;
 
+    /* A big bonus is given when it's white's turn, the second mover. 
+     * It helps equilibrate the scores and reduce fluctuations.
+     * 
+     * ELO: 188 +- 67
+     */
     const int komi = 7 * stone_value;
     score += komi * board.turn;
     
@@ -32,13 +35,20 @@ int eval(const Board &board) {
     return score;
 }
 
+/* A bonus is given for each stone in a valuable region of the board.
+ * This format is preferred to the traditional way performance-wise.
+ * 
+ * ELO: 119 +- 51
+ */
 int psqt_score(const Board &board, const int side) {
-    static const std::vector<std::pair<Bitboard, int>> psqt_normal {{
+    using PsqtTable = std::array<std::pair<Bitboard, int>, 2>;
+
+    static const PsqtTable psqt_normal {{
         {Bitboard{(uint64_t) 0b1000001000000000000000000000000000000000001000001}, 90},
         {Bitboard{(uint64_t) 0b0111110100000110000011000001100000110000010111110}, 70}
     }};
 
-    static const std::vector<std::pair<Bitboard, int>> psqt_endgame {{
+    static const PsqtTable psqt_endgame {{
         {Bitboard{(uint64_t) 0b1000001000000000000000000000000000000000001000001}, 30},
         {Bitboard{(uint64_t) 0b0111110100000110000011000001100000110000010111110}, 10}
     }};
@@ -47,12 +57,33 @@ int psqt_score(const Board &board, const int side) {
 
     int score = 0;
 
-    for (const auto &[bb, value] : psqt)
-        score += value * (bb & board.stones[side]).popCount();
+    for (const auto &[bb, bonus] : psqt)
+        score += bonus * (bb & board.stones[side]).popCount();
 
     return score;
 }
 
+/* A pocket is a well-dominated area from which it's easy to launch attacks.
+ * A fixed bonus is given for every stone near the 2x2 corner and 
+ * a variable bonus is given for stones in the suburbs (3x3 corner).
+ * 
+ * Likewise, central regions can be dangerous, as they are very attackable,
+ * so a penalty is given for every stone in them.
+ * 
+ * In a psqt format it'd look like so:
+ * 
+ *  10  10   0 -10   0  10  10
+ *  10  10   0 -10   0  10  10
+ *   0   0   0 -10   0   0   0
+ * -10 -10 -10 -20 -10 -10 -10
+ *   0   0   0 -10   0   0   0
+ *  10  10   0 -10   0  10  10
+ *  10  10   0 -10   0  10  10
+ * 
+ * It's left this way for performance.
+ * 
+ * ELO: 64 +- 34
+ */
 int pocket_score(const Board &board, const int side) {
     using PocketArray = std::array<Bitboard, 4>;
 
@@ -70,7 +101,7 @@ int pocket_score(const Board &board, const int side) {
         Bitboard{(uint64_t) 0b0000000000000000000000000000000011100001000000100},
     };
 
-    static const PocketArray center_pockets {
+    static const PocketArray central_regions {
         Bitboard{(uint64_t) 0b0001000000100000010001111000000000000000000000000},
         Bitboard{(uint64_t) 0b0001000000100000010000001111000000000000000000000},
         Bitboard{(uint64_t) 0b0000000000000000000001111000000100000010000001000},
@@ -91,7 +122,7 @@ int pocket_score(const Board &board, const int side) {
         score += corner_stones * corner_stone_bonus;
         score += corner_suburb_stone_bonus[corner_stones] * corner_suburb_stones;
         
-        const int center_stones = (board.stones[side] & center_pockets[i]).popCount();
+        const int center_stones = (board.stones[side] & central_regions[i]).popCount();
 
         score += center_stones * center_stone_penalty;
     }
@@ -99,6 +130,13 @@ int pocket_score(const Board &board, const int side) {
     return score;
 }
 
+/* A hole is an empty square surrounded by stones of either side.
+ * A penalty is given for holes that are surrounded by our own stones (weak)
+ * and the opponent's (strong).
+ * Penalties vary depending on how many weak stones there are.
+ * 
+ * ELO: 142 +- 47
+ */
 int holes_score(const Board &board, const int side) {
     static const std::array<int, 8> penalties = {0, 25, 50, 100, 150, 250, 350, 400};
 
@@ -116,99 +154,22 @@ int holes_score(const Board &board, const int side) {
     return score;
 }
 
+/* Stones are safe when they are surrounded by friendly stones;
+ * and they are weak when they are surrounded by empty squares.
+ * 
+ * ELO: 99 +- 48
+ */
 int safety_score(const Board &board, const int side) {
     if (board.empty.popCount() < 10)
         return 0;
 
     const Bitboard &singles = board.stones[side].singles();
     
-    const int weaknesses = (singles & board.empty).popCount();
+    const int weak = (singles & board.empty).popCount();
     const int penalty = -25;
 
-    const int safeties = (singles & board.stones[side]).popCount();
+    const int safe = (singles & board.stones[side]).popCount();
     const int bonus = 10;
 
-    return weaknesses * penalty + safeties * bonus;
+    return weak * penalty + safe * bonus;
 }
-
-/*
-std::vector<Bitboard> gen_regions(const int size) {
-    static const std::array<Bitboard, 7> bases = {
-        Bitboard{(uint64_t) 0b1000000000000000000000000000000000000000000000000},
-        Bitboard{(uint64_t) 0b1100000110000000000000000000000000000000000000000},
-        Bitboard{(uint64_t) 0b1110000111000011100000000000000000000000000000000},
-        Bitboard{(uint64_t) 0b1111000111100011110001111000000000000000000000000},
-        Bitboard{(uint64_t) 0b1111100111110011111001111100111110000000000000000},
-        Bitboard{(uint64_t) 0b1111110111111011111101111110111111011111100000000},
-        Bitboard{(uint64_t) 0b1111111111111111111111111111111111111111111111111}
-    };
-
-    const int repetitions = 8 - size;
-    const int count = repetitions * repetitions;
-
-    std::vector<Bitboard> regions;
-    regions.reserve(count);
-    regions.assign(1, bases[size - 1]);
-
-    for (int i = 0; i < count; i++) {
-        const int shift = 1 + (size - 1) * static_cast<int>(i % 7 == repetitions);
-        regions.push_back(regions[i] << shift);
-    }
-
-    return regions;
-}
-
-int density_score(const Board &board) {
-    static const std::vector<Bitboard> regions = gen_regions(2);
-
-    int score = 0;
-
-    for (const Bitboard &region : regions) {
-        const int mine = (board.stones[board.turn] & region).popCount();
-        const int other = (board.stones[board.turn ^ 1] & region).popCount();
-        const int empty = mine - other;
-
-        if (empty != 3)
-            continue;
-
-        if (mine == 1)
-            score += -10;
-        else if (other == 1)
-            score -= -10;        
-    }
-
-    return score;
-}
-*/
-
-/*
-int index_singles(const Board &board, const int sqr) {
-    assert(sqr % 7 > 0 && sqr % 7 < 6);
-    assert(sqr / 7 > 0 && sqr / 7 < 6);
-
-    Bitboard singles = singlesLookup[sqr];
-    const Bitboard singles_white = singles & board.stones[WHITE];
-    const Bitboard singles_black = singles & board.stones[BLACK];
-
-    int index = 0;
-
-    for (int i = 0; i < singles.popCount(); i++) {
-        const Bitboard bb = singles.lsbBB();
-        singles.unsetLSB();
-
-        int value;
-
-        if (bb & singles_white)
-            value = 1;
-        else if (bb & singles_black)
-            value = 2;
-        else
-            value = 0;
-
-        index *= 3;
-        index += value;
-    }
-
-    return index;
-}
-*/

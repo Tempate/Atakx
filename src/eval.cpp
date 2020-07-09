@@ -13,7 +13,6 @@ int safety_score(const Board &board, const int side);
 const int stone_value = 100;
 
 int eval(const Board &board) {
-
     int score = 0;
 
     const int material = board.stones[board.turn].popCount() - board.stones[board.turn ^ 1].popCount();
@@ -108,23 +107,23 @@ int pocket_score(const Board &board, const int side) {
         Bitboard{(uint64_t) 0b0000000000000000000000001111000100000010000001000},
     };
 
-    static const int corner_stone_bonus = 10;
+    static const std::array<int, 5> corner_stone_bonus = {0, 10, 20, 30, 40};
     static const std::array<int, 5> corner_suburb_stone_bonus = {0, 0, 2, 5, 15};
-    
-    static const int center_stone_penalty = -5;
+    static const std::array<int, 8> central_stone_penalty = {0, -5, -10, -15, -20, -25, -30, -35};
 
     int score = 0;
 
-    for (int i = 0; i < 4; i++) {
-        const int corner_stones = (board.stones[side] & corner_pockets[i]).popCount();
-        const int corner_suburb_stones = (board.stones[side] & corner_suburbs[i]).popCount();
+    const Bitboard &mine = board.stones[side];
 
-        score += corner_stones * corner_stone_bonus;
+    for (int i = 0; i < 4; i++) {
+        const int corner_stones = (mine & corner_pockets[i]).popCount();
+        score += corner_stone_bonus[corner_stones];
+
+        const int corner_suburb_stones = (mine & corner_suburbs[i]).popCount();
         score += corner_suburb_stone_bonus[corner_stones] * corner_suburb_stones;
         
-        const int center_stones = (board.stones[side] & central_regions[i]).popCount();
-
-        score += center_stones * center_stone_penalty;
+        const int central_stones = (mine & central_regions[i]).popCount();
+        score += central_stone_penalty[central_stones];
     }
 
     return score;
@@ -135,14 +134,17 @@ int pocket_score(const Board &board, const int side) {
  * and the opponent's (strong).
  * Penalties vary depending on how many weak stones there are.
  * 
- * ELO: 142 +- 47
+ * ELO: 178 +- 53
  */
 int holes_score(const Board &board, const int side) {
     static const std::array<int, 8> penalties = {0, 25, 50, 100, 150, 250, 350, 400};
 
-    const Bitboard bb = board.stones[side].singles() & 
-                        board.stones[side ^ 1].singles() &
-                        board.empty;
+    const Bitboard &enemys_frontier = board.stones[side ^ 1].singles();
+    const Bitboard &enemys_two_squares_away = enemys_frontier.singles();
+
+    const Bitboard &bb = board.stones[side].singles() & 
+                         (enemys_frontier | enemys_two_squares_away) &
+                         board.empty;
 
     int score = 0;
 
@@ -166,7 +168,7 @@ int safety_score(const Board &board, const int side) {
     const Bitboard &singles = board.stones[side].singles();
     
     const int weak = (singles & board.empty).popCount();
-    const int penalty = -25;
+    const int penalty = -10;
 
     const int safe = (singles & board.stones[side]).popCount();
     const int bonus = 10;

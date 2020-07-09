@@ -57,3 +57,9 @@ Remove polarization of the score
 
 Penalty for central stones
     1826 - 1677 - 37    (15 +- 11)
+
+Holes where the enemy is two blocks away
+    143 - 85 - 2        (90 +- 46)
+
+Reduce the penalty for weak stones
+    271 - 203 - 6       (50 +- 31)

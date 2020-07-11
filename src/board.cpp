@@ -139,9 +139,9 @@ void Board::fromFen(const std::string &fen) {
 }
 
 std::string Board::toFen() const {
-    std::string fen;
-
     static const char players[2] = {'x', 'o'};
+
+    std::string fen;
 
     for (int y = RANKS - 1; y >= 0; y--) {
         int blanks = 0;

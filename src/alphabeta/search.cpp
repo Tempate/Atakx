@@ -109,7 +109,9 @@ int pv_search(const Board &board, SearchState &state, std::vector<Move> &pv, int
         return static_eval;
 
     // Reverse Futility Pruning
-	if (depth <= 4 && static_eval - depth * stone_value > beta)
+    static const std::array<int, 5> margins = {0, 100, 200, 300, 400};
+
+	if (depth <= 4 && static_eval - margins[depth] > beta)
         return static_eval;
 
     // Null move reduction
@@ -159,11 +161,12 @@ int pv_search(const Board &board, SearchState &state, std::vector<Move> &pv, int
         const Move &move = moves[i];
 
         // Razoring
-        if (depth == 1 && i > 3 && static_eval + move.score < alpha)
+        // Skip moves who're not likely to raise alpha
+        if (i >= 4 && static_eval + move.score < alpha)
             break;
 
         // Late move pruning
-		// Skip quiet moves on low depths
+		// Skip low-scoring moves at low depths
 		if (i > 0 && ((depth <= 2 && move.score <= 200) || (depth <= 6 && move.score <= 100)))
             break;
 
@@ -174,7 +177,9 @@ int pv_search(const Board &board, SearchState &state, std::vector<Move> &pv, int
         int reduct = 1;
 
         // Late move reduction
-        if (i >= 2 && move.score <= 0)
+        const bool bad_score = (move.type == DOUBLE && move.captures <= 1) || (move.type == SINGLE && move.captures == 0);
+
+        if (i >= 2 && bad_score)
             reduct += 4;
         else if (i >= 2 || move.score <= 0)
             reduct += 2;
@@ -182,8 +187,6 @@ int pv_search(const Board &board, SearchState &state, std::vector<Move> &pv, int
         // PV Search
         int new_alpha = -beta;
 
-        // (move.type == SINGLE && move.captures == 0) ||
-        // (move.type == DOUBLE && move.captures <= 2)
         if (move.score <= 200)
             new_alpha = -alpha - 2;
 

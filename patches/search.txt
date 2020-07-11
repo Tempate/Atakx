@@ -59,3 +59,9 @@ Polarize scores in move ordering
 
 Extra reduction when the move is not at the beginning and has a bad score
 	321 - 231 - 8		(56 +- 29)
+
+More aggressive reductions
+	690 - 597 - 23		(25 +- 19)
+
+Removed depth constraint in razoring
+	214 - 141 - 5		(71 +- 36)

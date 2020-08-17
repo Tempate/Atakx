@@ -65,3 +65,9 @@ More aggressive reductions
 
 Removed depth constraint in razoring
 	214 - 141 - 5		(71 +- 36)
+
+LMR only for low depths
+	495 - 410 - 25		(32 +- 22)
+
+Try to keep an even number of holes in attack zones
+	3357 - 3030 - 213	(17 +- 8)

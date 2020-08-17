@@ -12,17 +12,15 @@ namespace alphabeta {
 
 void sort(const Board &board, std::vector<Move> &moves) {
     static const std::array<int, 9> jumping_penalties = {0, 0, 0, 100, 200, 200, 300, 300, 400};
-    // static const std::array<int, 9> hole_sealing_bonuses = {0, 0, 0, 100, 100, 200, 200, 300, 300};
-    
-    static const int SINGLE_MOVE_BONUS = 200;
 
-    const Entry entry = tt.get_entry(board.key);
+    const int empty = board.empty.popCount();
+    const Entry &entry = tt.get_entry(board.key);
 
     for (Move &move : moves) {
         if (entry.key == board.key && move == entry.move) {
             move.score = TT_MOVE;
         } else {
-            std::array<std::array<int, 9>, 2> score_by_captures {{
+            static const std::array<std::array<int, 9>, 2> score_by_captures {{
                 {200, 300, 400, 600, 700, 800, 900, 1000, 1100},        // Single moves
                 {0, 100, 200, 300, 400, 500, 600, 700, 800}             // Double moves
             }};
@@ -30,9 +28,12 @@ void sort(const Board &board, std::vector<Move> &moves) {
             move.captures = board.countCaptures(move);
             move.score = score_by_captures[move.type][move.captures];
 
-            if (move.type == DOUBLE && (neighboursLookup[move.from] & board.stones[board.turn ^ 1])) {
-                const int hole_size = (singlesLookup[move.from] & board.stones[board.turn]).popCount();
-                move.score -= jumping_penalties[hole_size];
+            if (move.type == DOUBLE) {
+                // Penalize jumps that leave a hole behind
+                if ((neighboursLookup[move.from] & board.stones[board.turn ^ 1])) {
+                    const int hole_size = (singlesLookup[move.from] & board.stones[board.turn]).popCount();
+                    move.score -= jumping_penalties[hole_size];
+                }
             }
         }
     }

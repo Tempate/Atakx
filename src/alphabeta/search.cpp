@@ -39,15 +39,17 @@ Move search(const Board &board, Settings &settings) {
 
         std::vector<Move> pv;
 
-        const int score = pv_search(board, state, pv, depth, alpha, beta);
+       const int score = pv_search(board, state, pv, depth, alpha, beta);
 
         state.pv = pv;
 
         const TimePoint current = std::chrono::steady_clock::now();
         const double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(current - start).count();
 
-        if (state.stop)
+        if (state.stop) {
+            assert(depth > 1);
             break;
+        }
 
         best_move = pv.front();
 
@@ -114,35 +116,15 @@ int pv_search(const Board &board, SearchState &state, std::vector<Move> &pv, int
 	if (depth <= 4 && static_eval - margins[depth] > beta)
         return static_eval;
 
-    // Null move reduction
-    /*
-	if (!pvNode && static_eval >= beta && board.empty.popCount() > 20 && !nullmove) {
-		const int R = 5;
-
-        Board copy = board;
-        copy.turn ^= 1;
-        
-        const int null_value = -alphabeta(copy, settings, childPV, end, depth - R - 1, -beta, -beta + 2, true);
-
-		if (null_value >= beta) {
-            const int score = alphabeta(board, settings, childPV, end, depth - R, alpha, beta, false);
-
-            if (score >= beta) {
-                pv.insert(pv.begin(), childPV.begin(), childPV.end());
-                return score;
-            }
-        }
-	}
-    */
-
     std::vector<Move> moves = board.genMoves();
     assert(moves.size() > 0);
 
     if (moves[0].type == NULL_MOVE) {
         const int mine = board.stones[board.turn].popCount();
         const int other = board.stones[board.turn ^ 1].popCount();
+        const int empty = board.empty.popCount();
 
-        if (board.empty.popCount() == 0) {
+        if (empty == 0) {
             if (mine > other)
                 return MATE_SCORE;
             else if (other > mine)
@@ -160,31 +142,41 @@ int pv_search(const Board &board, SearchState &state, std::vector<Move> &pv, int
     for (int i = 0; i < moves.size(); i++) {
         const Move &move = moves[i];
 
-        // Razoring
-        // Skip moves who're not likely to raise alpha
+        /* Razoring
+         * Stop when moves are unlikely to raise alpha
+         * 
+         * ELO: 37 +- 25
+         */
         if (i >= 4 && static_eval + move.score < alpha)
             break;
 
-        // Late move pruning
-		// Skip low-scoring moves at low depths
-		if (i > 0 && ((depth <= 2 && move.score <= 200) || (depth <= 6 && move.score <= 100)))
+        /* Late move pruning
+         * Skip low-scoring moves at low depths
+         */
+        if (i > 0 && depth <= 2 && move.score <= 200)
             break;
 
-        Board copy = board;
-        copy.key = tt.update_key(copy, move);
-        copy.make(move);
+        Board new_board = board;
+        new_board.key = tt.update_key(board, move);
+        new_board.make(move);
 
         int reduct = 1;
 
-        // Late move reduction
-        const bool bad_score = (move.type == DOUBLE && move.captures <= 1) || (move.type == SINGLE && move.captures == 0);
+        /* Late move reduction
+         * Reduce the search-depth for quiet moves and
+         * moves ordered at the end
+         * 
+         * ELO: 163 +- 66
+         */
+        const bool quiet_move = (move.type == DOUBLE && move.captures <= 1) || (move.type == SINGLE && move.captures == 0);
 
-        if (i >= 2 && bad_score)
+        if (i >= 2 && quiet_move)
             reduct += 4;
         else if (i >= 2 || move.score <= 0)
             reduct += 2;
         
         // PV Search
+        // Reduce the alpha-beta window for bad moves
         int new_alpha = -beta;
 
         if (move.score <= 200)
@@ -192,10 +184,10 @@ int pv_search(const Board &board, SearchState &state, std::vector<Move> &pv, int
 
         std::vector<Move> child_pv;
 
-        int score = -pv_search(copy, state, child_pv, depth - reduct, new_alpha, -alpha);
+        int score = -pv_search(new_board, state, child_pv, depth - reduct, new_alpha, -alpha);
 
         if (score > best_score && (reduct > 1 || new_alpha != -beta))
-            score = -pv_search(copy, state, child_pv, depth - 1, -beta, -alpha);
+            score = -pv_search(new_board, state, child_pv, depth - 1, -beta, -alpha);
 
         if (score > best_score) {
             best_score = score;

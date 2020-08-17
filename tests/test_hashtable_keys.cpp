@@ -12,22 +12,22 @@ void test_update_key() {
         const std::vector<Move> moves = board.genMoves();
 
         for (const Move &move : moves) {
-            Board copy = board;
-            copy.key = tt.update_key(copy, move);
-            copy.make(move);
+            Board new_board = board;
+            new_board.make(move);
+            new_board.key = tt.gen_key(new_board);
 
-            const uint64_t key = tt.gen_key(copy);
+            const uint64_t key = tt.gen_key(new_board);
 
-            if (copy.key != key) {
+            if (new_board.key != key) {
                 success = false;
 
                 std::cout << "Failed updating key from: " << std::endl;
                 board.print();
 
                 std::cout << "to:" << std::endl;
-                copy.print();
+                new_board.print();
 
-                std::cout << "The real key is " << key << " while the updated key is " << copy.key << std::endl;
+                std::cout << "The real key is " << key << " while the updated key is " << new_board.key << std::endl;
             }
         }
     }

@@ -2,13 +2,11 @@
 #include "lookup.hpp"
 #include "board.hpp"
 #include "eval.hpp"
-#include "tuner/tuner.hpp"
 
 int psqt_score(const Board &board, const int side);
 int pocket_score(const Board &board, const int side);
 int holes_score(const Board &board, const int side);
 int safety_score(const Board &board, const int side);
-
 
 const int stone_value = 100;
 
@@ -52,7 +50,7 @@ int psqt_score(const Board &board, const int side) {
         {Bitboard{(uint64_t) 0b0111110100000110000011000001100000110000010111110}, 10}
     }};
 
-    const auto &psqt = (board.empty.popCount() > 10) ? psqt_normal : psqt_endgame;
+    const PsqtTable &psqt = (board.empty.popCount() > 10) ? psqt_normal : psqt_endgame;
 
     int score = 0;
 
@@ -137,7 +135,7 @@ int pocket_score(const Board &board, const int side) {
  * ELO: 178 +- 53
  */
 int holes_score(const Board &board, const int side) {
-    static const std::array<int, 8> penalties = {0, 25, 50, 100, 150, 250, 350, 400};
+    static const std::array<int, 9> penalties = {0, 0, 25, 50, 100, 150, 250, 350, 400};
 
     const Bitboard &enemys_frontier = board.stones[side ^ 1].singles();
     const Bitboard &enemys_two_squares_away = enemys_frontier.singles();
@@ -148,9 +146,9 @@ int holes_score(const Board &board, const int side) {
 
     int score = 0;
 
-    for (int sqr : bb) {
+    for (const int sqr : bb) {
         const int weak = (singlesLookup[sqr] & board.stones[side]).popCount();
-        score -= penalties[weak-1];
+        score -= penalties[weak];
     }
 
     return score;
@@ -165,13 +163,15 @@ int safety_score(const Board &board, const int side) {
     if (board.empty.popCount() < 10)
         return 0;
 
+    int score = 0;
+
     const Bitboard &singles = board.stones[side].singles();
-    
+
     const int weak = (singles & board.empty).popCount();
-    const int penalty = -10;
+    score += -10 * weak;
 
     const int safe = (singles & board.stones[side]).popCount();
-    const int bonus = 10;
+    score += 10 * safe;
 
-    return weak * penalty + safe * bonus;
+    return score;
 }

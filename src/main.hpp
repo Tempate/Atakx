@@ -11,7 +11,7 @@
 
 #define DEBUG false
 #define TUNING false
-#define THREADS 5
+#define THREADS 1
 
 enum { RANDOM_PLAYER, MOST_CAPTURES, ALPHABETA };
 

@@ -35,9 +35,9 @@ add_executable(
 
     src/mcts/rollouts.cpp
     
-    src/tuner/tuner.cpp
-    src/tuner/population.cpp
-    src/tuner/player.cpp
+    src/tuners/genetic/main.cpp
+    src/tuners/genetic/population.cpp
+    src/tuners/genetic/player.cpp
 )
 
 # Add the executable
@@ -55,10 +55,6 @@ add_executable(
     src/alphabeta/sort.cpp
 
     src/mcts/rollouts.cpp
-    
-    src/tuner/tuner.cpp
-    src/tuner/population.cpp
-    src/tuner/player.cpp
 
     tests/main.cpp
     tests/test_mates.cpp

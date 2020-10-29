@@ -85,31 +85,38 @@ void position(Board &board, const std::string &s) {
 }
 
 void go(Board &board, const std::string &s) {
-    std::string cmd;
-    std::stringstream ss(s);
-    ss >> cmd;
-
     Settings settings;
     settings.init();
 
-    if (cmd.compare("infinite") == 0) {
-        settings.timed = false;
-        settings.depth = MAX_DEPTH;
-    } else if (cmd.compare("depth") == 0) {
-        settings.timed = false;
-        settings.depth = std::stoi(s.substr(6));
-    } 
-    
-    else if (cmd.compare("wtime") == 0)
-        settings.wtime = std::stoi(s.substr(6));
-    else if (cmd.compare("btime") == 0)
-        settings.btime = std::stoi(s.substr(6));
-    else if (cmd.compare("winc") == 0)
-        settings.winc = std::stoi(s.substr(5));
-    else if (cmd.compare("binc") == 0)
-        settings.binc = std::stoi(s.substr(5));
-    else if (cmd.compare("movetime") == 0)
-        settings.movetime = std::stoi(s.substr(9));
+    std::stringstream ss(s);
+    std::string cmd;
+
+    while (ss >> cmd) {
+        if (cmd.compare("infinite") == 0) {
+            settings.timed = false;
+            settings.depth = MAX_DEPTH;
+        } else if (cmd.compare("depth") == 0) {
+            settings.timed = false;
+            settings.depth = std::stoi(s.substr(6));
+        } 
+        
+        else if (cmd.compare("wtime") == 0) {
+            ss >> cmd;
+            settings.wtime = std::stoi(cmd);
+        } else if (cmd.compare("btime") == 0) {
+            ss >> cmd;
+            settings.btime = std::stoi(cmd);
+        } else if (cmd.compare("winc") == 0) {
+            ss >> cmd;
+            settings.winc = std::stoi(cmd);
+        } else if (cmd.compare("binc") == 0) {
+            ss >> cmd;
+            settings.binc = std::stoi(cmd);
+        }  else if (cmd.compare("movetime") == 0) {
+            ss >> cmd;
+            settings.movetime = std::stoi(cmd);
+        }
+    };
 
     const Move move = bestmove(board, settings);
 

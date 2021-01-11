@@ -42,7 +42,7 @@ void uai() {
         if (cmd.compare("isready") == 0)
             isready();
 
-        else if (cmd.compare("ucinewgame") == 0) {
+        else if (cmd.compare("uainewgame") == 0) {
             board.startpos();
             tt.clear();
         }
